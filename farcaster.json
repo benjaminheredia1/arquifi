@@ -8,7 +8,7 @@
     "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop",
     "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop"
   ],
-  "previewImage": "https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=1200&h=630&fit=crop",
+  "previewImage": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
   "heroImage": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop",
   "splashScreenImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1080&h=1920&fit=crop",
   "splashBackgroundColor": "#1a1a2e",
@@ -26,7 +26,7 @@
   "buttonTitle": "Jugar Ahora",
   "ogTitle": "KokiFi Lottery - Lotería Descentralizada",
   "ogDescription": "Compra tickets, rasca KoTickets y gana premios en KOKI. La primera lotería descentralizada en Farcaster.",
-  "ogImageUrl": "https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=1200&h=630&fit=crop",
+  "ogImageUrl": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
   "castShareUrl": "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery.vercel.app",
   "homeUrl": "https://koqui-fi-lottery.vercel.app",
   "webhookUrl": "https://koqui-fi-lottery.vercel.app/api/webhook"
