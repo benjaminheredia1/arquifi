@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, getOne, run } from '@/lib/database-optimized'
+import { getKoTickets, insertData } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,19 +14,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user KoTickets
-    const kotickets = await query(
-      'SELECT * FROM kotickets WHERE user_id = ? ORDER BY purchase_time DESC',
-      [userId]
-    )
+    console.log('🔍 Obteniendo KoTickets para usuario:', userId)
+    const allKoTickets = await getKoTickets()
+    console.log('📋 Todos los KoTickets:', allKoTickets)
+    const userKoTickets = allKoTickets.filter(koticket => koticket.user_id === parseInt(userId))
+    console.log('🎫 KoTickets del usuario:', userKoTickets)
 
     // Mapear los KoTickets para incluir timestamp
-    const mappedKoTickets = (kotickets || []).map(koticket => ({
+    const mappedKoTickets = userKoTickets.map(koticket => ({
       ...koticket,
+      owner: koticket.user_id, // Mapear user_id a owner para el frontend
       purchaseTime: new Date(koticket.purchase_time).getTime() / 1000, // Convertir a timestamp
       isScratched: koticket.is_scratched,
       prizeAmount: koticket.prize_amount,
       scratchDate: koticket.scratch_date
     }))
+    console.log('🎯 KoTickets mapeados:', mappedKoTickets)
 
     return NextResponse.json({
       success: true,
@@ -54,25 +57,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar que el usuario tiene al menos 100 KOKI
-    const user = await getOne('SELECT * FROM users WHERE id = ?', [userId])
-    if (!user || user.balance < 100) {
+    // Verificar que el usuario existe (sin restricción de balance)
+    const { getUsers } = await import('@/lib/supabase')
+    const users = await getUsers('id', [parseInt(userId)])
+    const user = users[0] || null
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Necesitas al menos 100 KOKI para acceder al juego de rascar' },
+        { success: false, error: 'Usuario no encontrado' },
         { status: 400 }
       )
     }
 
     // Create KoTickets (GRATIS)
     const kotickets = []
+    const allKoTickets = await getKoTickets()
+    const maxId = allKoTickets.length > 0 ? Math.max(...allKoTickets.map(kt => kt.id)) : 0
+    
     for (let i = 0; i < quantity; i++) {
-      await run(`
-        INSERT INTO kotickets (user_id, price)
-        VALUES (?, ?)
-      `, [userId, 0]) // Precio 0 = GRATIS
+      const nextId = maxId + i + 1
+      const newKoTicketData = {
+        id: nextId,
+        user_id: parseInt(userId),
+        price: 0, // Precio 0 = GRATIS
+        is_scratched: false,
+        prize_amount: 0,
+        purchase_time: new Date().toISOString()
+      }
       
-      const newKoTicket = await getOne('SELECT * FROM kotickets WHERE id = last_insert_rowid()')
-      kotickets.push(newKoTicket)
+      console.log('🎫 Creando KoTicket con ID:', nextId, 'para usuario:', userId)
+      const result = await insertData('kotickets', newKoTicketData)
+      kotickets.push(result[0])
     }
 
     return NextResponse.json({

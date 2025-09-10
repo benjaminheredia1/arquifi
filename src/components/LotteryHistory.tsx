@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Trophy, Calendar, Users, Coins, ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -10,8 +10,8 @@ interface LotteryHistoryProps {
 
 interface LotteryWithWinner {
   id: string
-  startDate: string
-  endDate: string
+  startTime: string
+  endTime: string
   winningNumbers: number[]
   totalTickets: number
   totalPrize: string
@@ -31,11 +31,7 @@ export function LotteryHistory({ user }: LotteryHistoryProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => {
-    loadLotteryHistory()
-  }, [currentPage])
-
-  const loadLotteryHistory = async () => {
+  const loadLotteryHistory = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/lottery-history?page=${currentPage}&limit=10`)
@@ -50,10 +46,22 @@ export function LotteryHistory({ user }: LotteryHistoryProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentPage])
+
+  useEffect(() => {
+    loadLotteryHistory()
+  }, [currentPage, loadLotteryHistory])
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Fecha no disponible'
+    
     const date = new Date(dateString)
+    
+    // Verificar si la fecha es válida
+    if (isNaN(date.getTime())) {
+      return 'Fecha inválida'
+    }
+    
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -82,7 +90,7 @@ export function LotteryHistory({ user }: LotteryHistoryProps) {
           <Trophy className="w-12 h-12 text-yellow-400 mr-4" />
           <div>
             <h2 className="text-3xl font-bold text-white">Historial de Sorteos</h2>
-            <p className="text-white/70">Todos los ganadores desde agosto 2024</p>
+            <p className="text-white/70">Todos los ganadores desde agosto 2025</p>
           </div>
         </div>
       </div>
@@ -121,12 +129,12 @@ export function LotteryHistory({ user }: LotteryHistoryProps) {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-white">
-                      Sorteo del {formatDate(lottery.endDate)}
+                      Sorteo del {formatDate(lottery.endTime)}
                     </h3>
                     <div className="flex items-center space-x-4 text-white/70 text-sm">
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>{formatDate(lottery.startDate)} - {formatDate(lottery.endDate)}</span>
+                        <span>{formatDate(lottery.startTime)} - {formatDate(lottery.endTime)}</span>
                       </div>
                     </div>
                   </div>
@@ -143,22 +151,18 @@ export function LotteryHistory({ user }: LotteryHistoryProps) {
               <div className="mb-4">
                 <h4 className="text-white/80 font-medium mb-2">Números Ganadores:</h4>
                 <div className="flex flex-wrap gap-2">
-                  {lottery.winningNumbers && Array.isArray(lottery.winningNumbers) ? (
-                    lottery.winningNumbers.map((number, idx) => (
-                      <div
-                        key={idx}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
-                          isUserWinner(lottery)
-                            ? 'bg-yellow-400 text-black'
-                            : 'bg-primary-500 text-white'
-                        }`}
-                      >
-                        {number}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-white/60 text-sm">Números no disponibles</div>
-                  )}
+                  {lottery.winningNumbers.map((number, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
+                        isUserWinner(lottery)
+                          ? 'bg-yellow-400 text-black'
+                          : 'bg-primary-500 text-white'
+                      }`}
+                    >
+                      {number}
+                    </div>
+                  ))}
                 </div>
               </div>
 

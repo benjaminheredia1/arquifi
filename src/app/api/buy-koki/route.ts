@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run } from '@/lib/database-optimized'
+import { getUsers, updateData } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
 
     // Verificar que el usuario existe
     console.log('Looking for user with ID:', userId)
-    const user = await getOne('SELECT * FROM users WHERE id = ?', [userId])
+    const users = await getUsers('id', [parseInt(userId)])
+    const user = users[0] || null
     console.log('User found:', user ? 'Yes' : 'No', user ? `ID: ${user.id}, Balance: ${user.balance}` : '')
     if (!user) {
       console.log('User not found for ID:', userId)
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     // Actualizar el balance del usuario
     const newBalance = user.balance + totalAmount
     console.log('Balance update:', { currentBalance: user.balance, totalAmount, newBalance })
-    await run('UPDATE users SET balance = ? WHERE id = ?', [newBalance, userId])
+    await updateData('users', { balance: newBalance }, { id: parseInt(userId) })
     console.log('Balance updated successfully')
 
     // Registrar la transacción
@@ -55,14 +56,13 @@ export async function POST(request: NextRequest) {
       : `Compra de ${amount} KOKI`
     
     console.log('Creating transaction:', { userId, type: 'deposit', amount: totalAmount, description })
-    await run(`
-      INSERT INTO transactions (user_id, type, amount, description, status)
-      VALUES (?, ?, ?, ?, ?)
-    `, [userId, 'deposit', totalAmount, description, 'completed'])
-    console.log('Transaction created successfully')
+    // Nota: Por ahora saltamos la creación de transacciones ya que no tenemos la tabla configurada
+    // await insertData('transactions', { user_id: parseInt(userId), type: 'deposit', amount: totalAmount, description, status: 'completed' })
+    console.log('Transaction creation skipped (table not configured)')
 
     // Obtener el usuario actualizado
-    const updatedUser = await getOne('SELECT * FROM users WHERE id = ?', [userId])
+    const updatedUsers = await getUsers('id', [parseInt(userId)])
+    const updatedUser = updatedUsers[0] || null
     console.log('Updated user:', updatedUser ? `ID: ${updatedUser.id}, Balance: ${updatedUser.balance}` : 'Not found')
 
     // Mapear campos de la base de datos al frontend

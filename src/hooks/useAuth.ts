@@ -121,6 +121,20 @@ export function useAuth() {
     localStorage.setItem('kokifi_user', JSON.stringify(updatedUser))
   }, [])
 
+  // Escuchar eventos de actualización de usuario (cuando se compra un ticket)
+  useEffect(() => {
+    const handleUserUpdate = (event: CustomEvent) => {
+      console.log('🔄 useAuth: Usuario actualizado desde evento:', event.detail)
+      updateUser(event.detail)
+    }
+
+    window.addEventListener('userUpdated', handleUserUpdate as EventListener)
+    
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate as EventListener)
+    }
+  }, [updateUser])
+
   const refreshUser = useCallback(async () => {
     if (!user?.id) return
 
@@ -134,7 +148,7 @@ export function useAuth() {
     } catch (error) {
       console.error('Error refreshing user:', error)
     }
-  }, [user?.id, updateUser])
+  }, [user, updateUser])
 
   const buyKoki = useCallback(async (amount: number): Promise<boolean> => {
     if (!user?.id) {
@@ -176,7 +190,7 @@ export function useAuth() {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, updateUser])
+  }, [user, updateUser])
 
   const changeAvatar = useCallback(async (avatarUrl: string): Promise<boolean> => {
     if (!user?.id) {
@@ -216,7 +230,7 @@ export function useAuth() {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, updateUser])
+  }, [user, updateUser])
 
   return {
     user,

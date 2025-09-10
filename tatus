@@ -1,0 +1,10 @@
+[33m7a87047[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m  Fix LotteryHistory map error - add null checks and proper data mapping
+[33mc4a73eb[m  Fix database column errors - correct column names in all endpoints
+[33m3bf4bd2[m  Fix lottery history loading - add sample data and better error handling
+[33mc1ff3e4[m  Fix all API endpoints to use optimized database - resolve login issues
+[33m94c601d[m  Optimize SQLite for Vercel - add aggressive caching and memory optimizations
+[33mb961a45[m  Add Neon database integration - migrate to PostgreSQL
+[33m889d80d[m  Add Supabase integration - migrate from SQLite to PostgreSQL
+[33mc085e1a[m  Optimize database performance - add caching and SQLite optimizations
+[33m30f9603[m  Fix lottery-history API - use query instead of getAll
+[33m8941956[m  Fix lottery-history API to use SQLite instead of demo database

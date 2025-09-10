@@ -1,193 +1,210 @@
-# 🎰 KoquiFI Lottery
+# KoquiFI Lottery 🎰
 
-Una aplicación de lotería moderna y elegante construida con Next.js, React y Tailwind CSS.
+Una lotería descentralizada innovadora construida en Base Network con integración completa de Farcaster. Combina la transparencia de blockchain con la comunidad social para crear una experiencia única de lotería.
 
-## ✨ Características
+## 🚀 Características
 
-- 🎫 **Sistema de Lotería Semanal**: Tickets numerados del 1-50 para sorteos semanales
-- 🎁 **KoTickets**: Sistema de rascar y ganar con premios de 1-10 KOKI
-- 💰 **Economía KOKI**: Moneda virtual con sistema de compra y bonificaciones
-- 👤 **Perfil de Usuario**: Sistema completo de autenticación y gestión de perfil
-- 📱 **Diseño Responsive**: Optimizado para mobile y desktop
-- 🎨 **UI Moderna**: Diseño elegante con animaciones y efectos visuales
-- 📊 **Estadísticas en Tiempo Real**: Seguimiento de gastos, tickets y rendimiento
-- 🔄 **Persistencia de Datos**: Base de datos SQLite para almacenamiento local
+- **Totalmente Descentralizado**: Smart contracts en Base Network
+- **Sorteos Automáticos**: Cada lunes a las 00:00 UTC con Chainlink VRF
+- **Integración Farcaster**: Autenticación y experiencia social
+- **Frontend Moderno**: React/TypeScript con diseño responsivo
+- **Base Network**: Transacciones rápidas y económicas
 
-## 🚀 Tecnologías Utilizadas
+## 🛠️ Stack Tecnológico
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS, Framer Motion
-- **Base de Datos**: SQLite
-- **Autenticación**: Sistema personalizado
-- **Web3**: Wagmi, WalletConnect (preparado para integración)
+### Frontend
+- **Next.js 14** con App Router
+- **TypeScript** para type safety
+- **Tailwind CSS** para estilos
+- **Framer Motion** para animaciones
+- **Wagmi** para interacción con blockchain
+- **React Query** para manejo de estado
 
-## 📦 Instalación
+### Backend
+- **Next.js API Routes** para endpoints
+- **Neynar API** para integración Farcaster
+- **Base Network** para blockchain
 
-1. **Clona el repositorio**:
-   ```bash
-   git clone https://github.com/TheDuckHacker/KoquiFI-Lottery.git
-   cd KoquiFI-Lottery
-   ```
+### Smart Contracts
+- **Solidity** con OpenZeppelin
+- **Foundry** para desarrollo y testing
+- **Chainlink VRF** para aleatoriedad
+- **Base Sepolia** para testing
 
-2. **Instala las dependencias**:
-   ```bash
-   npm install
-   ```
+## 📋 Requisitos
 
-3. **Ejecuta la aplicación**:
-   ```bash
-   npm run dev
-   ```
+- Node.js 18+
+- npm o yarn
+- Foundry (para smart contracts)
+- Wallet (MetaMask, etc.)
 
-4. **Abre tu navegador** en `http://localhost:3000`
+## 🚀 Instalación
 
-## 🎮 Cómo Usar
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/your-username/kokifi-lottery.git
+cd kokifi-lottery
+```
 
-### Registro y Login
-- Crea una cuenta con email y contraseña
-- Selecciona un avatar personalizado
-- Inicia sesión para acceder a todas las funcionalidades
+### 2. Instalar dependencias
+```bash
+npm install
+```
 
-### Sistema de Lotería
-- **Comprar Tickets**: Adquiere tickets numerados (1-50) para el sorteo semanal
-- **Precio**: 10 KOKI por ticket
-- **Sorteo**: Cada semana se seleccionan números ganadores
-- **Premios**: El bote se distribuye entre los ganadores
+### 3. Configurar variables de entorno
+```bash
+cp env.example .env.local
+```
 
-### KoTickets (Rascar y Ganar)
-- **Gratis**: Los KoTickets son gratuitos
-- **Requisito**: Necesitas 100+ KOKI para acceder
-- **Premios**: 1-10 KOKI al azar
-- **Disponibilidad**: Se acumulan automáticamente cada día
+Edita `.env.local` con tus claves:
+- `NEXT_PUBLIC_NEYNAR_API_KEY`: Tu API key de Neynar
+- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: Tu Project ID de WalletConnect
+- `PRIVATE_KEY`: Tu clave privada para deployment
 
-### Economía KOKI
-- **Compra**: Adquiere KOKI con bonificaciones
-- **Uso**: Para comprar tickets de lotería
-- **Acceso**: Requerido para jugar KoTickets
+### 4. Compilar smart contracts
+```bash
+npm run contracts:compile
+```
 
-## 🏗️ Estructura del Proyecto
+### 5. Ejecutar tests
+```bash
+npm run contracts:test
+```
+
+### 6. Deployar contratos (Base Sepolia)
+```bash
+npm run contracts:deploy
+```
+
+### 7. Iniciar aplicación
+```bash
+npm run dev
+```
+
+## 🎮 Uso
+
+### Para Usuarios
+1. **Conectar Wallet**: Conecta tu wallet de Base Network
+2. **Iniciar Sesión**: Usa tu cuenta de Farcaster o crea una nueva
+3. **Comprar Tickets**: Selecciona números del 1-50 (10 KOKI cada uno)
+4. **Esperar Sorteo**: Cada lunes a las 00:00 UTC
+5. **Reclamar Premios**: Si eres ganador, reclama tus premios
+
+### Para Desarrolladores
+1. **Fork del repositorio**
+2. **Crear rama feature**: `git checkout -b feature/nueva-funcionalidad`
+3. **Hacer cambios y tests**
+4. **Commit**: `git commit -m 'Add nueva funcionalidad'`
+5. **Push**: `git push origin feature/nueva-funcionalidad`
+6. **Crear Pull Request**
+
+## 🏗️ Arquitectura
 
 ```
 src/
-├── app/                    # App Router de Next.js
-│   ├── api/               # API Routes
-│   │   ├── auth/          # Autenticación
-│   │   ├── buy-koki/      # Compra de KOKI
-│   │   ├── kotickets/     # Gestión de KoTickets
-│   │   └── ...
-│   ├── layout.tsx         # Layout principal
-│   └── page.tsx           # Página principal
-├── components/            # Componentes React
-│   ├── UserProfile.tsx    # Perfil de usuario
-│   ├── TicketScratchGame.tsx # Juego de rascar
-│   ├── ActionButtons.tsx  # Botones principales
+├── app/                 # Next.js App Router
+│   ├── api/            # API Routes
+│   ├── globals.css     # Estilos globales
+│   ├── layout.tsx      # Layout principal
+│   └── page.tsx        # Página principal
+├── components/         # Componentes React
+│   ├── Header.tsx
+│   ├── Hero.tsx
+│   ├── Countdown.tsx
 │   └── ...
-├── hooks/                 # Custom Hooks
-├── lib/                   # Utilidades y configuración
-├── types/                 # Definiciones de TypeScript
-└── styles/                # Estilos globales
+├── hooks/              # Custom hooks
+│   ├── useAuth.ts
+│   └── useLottery.ts
+├── lib/                # Utilidades
+│   ├── wagmi.ts
+│   └── neynar.ts
+└── types/              # TypeScript types
+    └── index.ts
+
+contracts/              # Smart contracts
+├── KokiToken.sol
+├── KokiLottery.sol
+└── ...
+
+scripts/                # Deployment scripts
+└── Deploy.s.sol
 ```
 
-## 🎯 Funcionalidades Principales
+## 🔧 Scripts Disponibles
 
-### Sistema de Usuarios
-- Registro con email y contraseña
-- Perfil personalizable con avatar
-- Estadísticas de juego
-- Historial de transacciones
+```bash
+# Desarrollo
+npm run dev              # Iniciar servidor de desarrollo
+npm run build            # Construir para producción
+npm run start            # Iniciar servidor de producción
+npm run lint             # Ejecutar linter
 
-### Sistema de Lotería
-- Tickets numerados del 1-50
-- Sorteos semanales automáticos
-- Distribución de premios
-- Historial de sorteos
+# Smart Contracts
+npm run contracts:compile    # Compilar contratos
+npm run contracts:test       # Ejecutar tests
+npm run contracts:deploy     # Deployar a Base Sepolia
+npm run contracts:deploy-local # Deployar a red local
 
-### KoTickets
-- Sistema de rascar y ganar
-- Premios aleatorios de 1-10 KOKI
-- Acumulación diaria automática
-- Interfaz de juego interactiva
-
-### Economía KOKI
-- Sistema de compra con bonificaciones
-- Balance en tiempo real
-- Transacciones registradas
-- Integración con todos los sistemas
-
-## 🔧 Configuración
-
-### Variables de Entorno
-Crea un archivo `.env.local`:
-```env
-# Base de datos
-DATABASE_URL=./kokifi-lottery.db
-
-# Configuración de la aplicación
-NEXT_PUBLIC_APP_NAME=KoquiFI Lottery
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Desarrollo completo
+npm run dev:full         # Iniciar frontend + deploy local
 ```
 
-### Base de Datos
-La aplicación usa SQLite para almacenamiento local. La base de datos se crea automáticamente en `./kokifi-lottery.db`.
+## 🌐 Redes Soportadas
 
-## 📱 Diseño Responsive
+- **Base Sepolia** (Testnet) - Para desarrollo y testing
+- **Base Mainnet** (Producción) - Para uso real
 
-- **Mobile First**: Optimizado para dispositivos móviles
-- **Breakpoints**: sm, md, lg, xl
-- **Navegación**: Barra inferior en mobile
-- **Componentes**: Adaptables a todos los tamaños
+## 🔐 Seguridad
 
-## 🎨 Personalización
+- **Smart contracts auditados** con OpenZeppelin
+- **Chainlink VRF** para aleatoriedad verificable
+- **ReentrancyGuard** para prevenir ataques
+- **Pausable** para emergencias
+- **Ownable** para control administrativo
 
-### Colores
-- **Primary**: Azul (#3B82F6)
-- **Accent**: Verde (#10B981)
-- **Success**: Verde (#22C55E)
-- **Warning**: Amarillo (#F59E0B)
-- **Error**: Rojo (#EF4444)
+## 📊 Funcionalidades
 
-### Animaciones
-- **Framer Motion**: Transiciones suaves
-- **Hover Effects**: Efectos interactivos
-- **Loading States**: Estados de carga animados
+### Para Usuarios
+- ✅ Compra de tickets (números 1-50)
+- ✅ Visualización de estado de lotería
+- ✅ Historial de resultados
+- ✅ Reclamo de premios
+- ✅ Integración con Farcaster
+- ✅ Conteo regresivo en tiempo real
 
-## 🚀 Despliegue
-
-### Vercel (Recomendado)
-1. Conecta tu repositorio a Vercel
-2. Configura las variables de entorno
-3. Despliega automáticamente
-
-### Otras Plataformas
-- **Netlify**: Compatible con Next.js
-- **Railway**: Para aplicaciones full-stack
-- **Heroku**: Con configuración adicional
+### Para Administradores
+- ✅ Ejecución automática de sorteos
+- ✅ Gestión de premios
+- ✅ Estadísticas en tiempo real
+- ✅ Control de emergencias
 
 ## 🤝 Contribuir
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+2. Crea tu rama feature (`git checkout -b feature/AmazingFeature`)
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-## 📄 Licencia
+## 📝 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 
-## 👨‍💻 Autor
+## 🆘 Soporte
 
-**TheDuckHacker**
-- GitHub: [@TheDuckHacker](https://github.com/TheDuckHacker)
+- **Documentación**: [Wiki del proyecto](https://github.com/your-username/kokifi-lottery/wiki)
+- **Issues**: [GitHub Issues](https://github.com/your-username/kokifi-lottery/issues)
+- **Discord**: [Servidor de la comunidad](https://discord.gg/kokifi)
+- **Twitter**: [@KoquiFILottery](https://twitter.com/KoquiFILottery)
 
 ## 🙏 Agradecimientos
 
-- Next.js por el framework
-- Tailwind CSS por el sistema de estilos
-- Framer Motion por las animaciones
-- SQLite por la base de datos
-- La comunidad de React por el soporte
+- **Base Network** por la infraestructura blockchain
+- **Farcaster** por la integración social
+- **Chainlink** por VRF y oráculos
+- **OpenZeppelin** por los contratos seguros
+- **Next.js** por el framework React
 
 ---
 
-⭐ **¡Dale una estrella al proyecto si te gusta!** ⭐
+**¡Construido con ❤️ por el equipo de KoquiFI!**

@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 interface LoadingScreenProps {
   onComplete: () => void
@@ -11,26 +11,29 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0)
   const [currentText, setCurrentText] = useState('')
 
-  const loadingTexts = [
-    'Inicializando KoquiFI Lottery...',
+  const loadingTexts = useMemo(() => [
+    'Inicializando KokiFi Lottery...',
     'Conectando con Base Network...',
     'Cargando smart contracts...',
     'Preparando interfaz de usuario...',
     'Sincronizando datos...',
     '¡Casi listo!'
-  ]
+  ], [])
 
   useEffect(() => {
+    // Inicializar con el primer texto
+    setCurrentText(loadingTexts[0])
+    
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval)
-          setTimeout(onComplete, 500)
+          setTimeout(onComplete, 300)
           return 100
         }
-        return prev + 2
+        return prev + 3
       })
-    }, 50)
+    }, 60)
 
     const textInterval = setInterval(() => {
       setCurrentText(prev => {
@@ -38,13 +41,13 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
         const nextIndex = (currentIndex + 1) % loadingTexts.length
         return loadingTexts[nextIndex]
       })
-    }, 800)
+    }, 600)
 
     return () => {
       clearInterval(interval)
       clearInterval(textInterval)
     }
-  }, [onComplete])
+  }, [onComplete, loadingTexts])
 
   return (
     <motion.div
@@ -103,7 +106,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg"
         >
-          KoquiFI Lottery
+          KokiFi Lottery
         </motion.h1>
 
         {/* Subtitle */}

@@ -247,6 +247,11 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
   
+  /* Add extra padding for mobile content to avoid overlap with bottom nav */
+  main {
+    padding-bottom: 6rem !important;
+  }
+  
   /* Mobile modals */
   .modal-overlay {
     padding: 1rem;
@@ -306,6 +311,11 @@
   
   .p-4 {
     padding: 0.75rem;
+  }
+  
+  /* Extra padding for very small screens */
+  main {
+    padding-bottom: 7rem !important;
   }
 }
 

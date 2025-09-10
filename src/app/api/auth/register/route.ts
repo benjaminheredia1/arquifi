@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run } from '@/lib/database-optimized'
+import { getUsers, insertData } from '@/lib/supabase'
 
 // Lista de avatares con animalitos animados y bonitos
 const AVATAR_OPTIONS = [
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar si el email ya existe
-    const existingUser = await getOne('SELECT * FROM users WHERE email = ?', [email])
-    if (existingUser) {
+    const existingUsers = await getUsers('email', [email])
+    if (existingUsers.length > 0) {
       return NextResponse.json(
         { success: false, error: 'Este email ya está registrado' },
         { status: 400 }
@@ -70,26 +70,42 @@ export async function POST(request: NextRequest) {
     const fid = Math.floor(Math.random() * 100000) + 10000
     const address = `0x${Math.random().toString(16).substr(2, 40)}`
 
-    // Crear nuevo usuario en SQLite (sin especificar id, se auto-incrementa)
-    const result = await run(`
-      INSERT INTO users (username, email, password, fid, display_name, pfp_url, address, balance, tickets_count, total_spent, is_verified)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
+    // Obtener el siguiente ID disponible para usuarios
+    const allUsers = await getUsers()
+    const maxId = allUsers.length > 0 ? Math.max(...allUsers.map(u => u.id)) : 0
+    const nextId = maxId + 1
+
+    // Crear nuevo usuario en Supabase con ID específico para evitar conflictos
+    const newUserData = {
+      id: nextId,
       username,
       email,
       password,
       fid,
-      username,
-      selectedAvatar,
+      display_name: username,
+      pfp_url: selectedAvatar,
       address,
-      1000, // Balance inicial
-      0,    // Tickets count
-      0,    // Total spent
-      1     // Is verified (1 para true en SQLite)
-    ])
+      balance: 1000, // Balance inicial
+      tickets_count: 0, // Tickets count
+      total_spent: 0, // Total spent
+      is_verified: true // Is verified
+    }
+
+    console.log('🔍 Creando usuario con datos:', newUserData)
+    const result = await insertData('users', newUserData)
+    console.log('✅ Usuario creado, resultado:', result)
 
     // Obtener el usuario creado usando el email
-    const newUser = await getOne('SELECT * FROM users WHERE email = ?', [email])
+    const newUsers = await getUsers('email', [email])
+    const newUser = newUsers[0]
+
+    if (!newUser) {
+      console.error('Error: Usuario no se pudo crear correctamente')
+      return NextResponse.json(
+        { success: false, error: 'Error al crear el usuario' },
+        { status: 500 }
+      )
+    }
 
     // Remove password from response and map fields
     const { password: _, ...userWithoutPassword } = newUser
@@ -114,7 +130,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         user: mappedUser,
-        message: 'Usuario registrado exitosamente. ¡Bienvenido a KoquiFI Lottery!'
+        message: 'Usuario registrado exitosamente. ¡Bienvenido a KokiFi Lottery!'
       }
     })
 

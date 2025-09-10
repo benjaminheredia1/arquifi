@@ -1,20 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Wallet, 
-  Ticket, 
-  Trophy, 
-  Clock, 
-  Users, 
-  TrendingUp,
-  Menu,
-  X,
-  LogOut,
-  User
-} from 'lucide-react'
+// Importaciones de iconos removidas - no se usan en este archivo
 import toast from 'react-hot-toast'
 
 import { Header } from '@/components/Header'
@@ -50,15 +39,13 @@ export default function HomePage() {
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   
-  const { user, login, logout, isAuthenticated, buyKoki, changeAvatar } = useAuth()
+  const { user, login, logout, isAuthenticated, buyKoki, changeAvatar, updateUser } = useAuth()
   const { 
     lottery, 
-    tickets, 
     stats, 
     countdown, 
     buyTicket, 
-    loadLotteryInfo,
-    isLoading: lotteryLoading 
+    loadLotteryInfo 
   } = useLottery(user)
 
   const [activeModal, setActiveModal] = useState<string | null>(null)
@@ -66,7 +53,13 @@ export default function HomePage() {
   const [currentSection, setCurrentSection] = useState('home')
   const [isLoading, setIsLoading] = useState(true)
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
-  const [koTickets, setKoTickets] = useState<any[]>([])
+  const [koTickets, setKoTickets] = useState<Array<{
+    id: string
+    owner: string
+    purchaseTime: number
+    isScratched: boolean
+    prize?: number
+  }>>([])
 
   useEffect(() => {
     loadLotteryInfo()
@@ -77,8 +70,16 @@ export default function HomePage() {
     const checkAuth = () => {
       const savedUser = localStorage.getItem('kokifi_user')
       if (savedUser) {
-        console.log('User already authenticated, skipping loading screen')
-        setIsLoading(false)
+        console.log('User already authenticated, but showing loading screen for minimum time')
+        // Mostrar pantalla de carga por al menos 2 segundos
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 2000)
+      } else {
+        // Si no hay usuario, mostrar pantalla de carga por 3 segundos
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 3000)
       }
       setHasCheckedAuth(true)
     }
@@ -86,7 +87,22 @@ export default function HomePage() {
     checkAuth()
   }, [])
 
-  const loadKoTickets = async () => {
+  // Escuchar actualizaciones del usuario desde otros componentes
+  useEffect(() => {
+    const handleUserUpdate = (event: CustomEvent) => {
+      if (event.detail) {
+        updateUser(event.detail)
+      }
+    }
+
+    window.addEventListener('userUpdated', handleUserUpdate as EventListener)
+    
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate as EventListener)
+    }
+  }, [updateUser])
+
+  const loadKoTickets = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -99,9 +115,9 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error loading KoTickets:', error)
     }
-  }
+  }, [user?.id])
 
-  const accumulateKoTickets = async () => {
+  const accumulateKoTickets = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -123,7 +139,7 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error accumulating KoTickets:', error)
     }
-  }
+  }, [user?.id, loadKoTickets])
 
   // Load KoTickets when user changes
   useEffect(() => {
@@ -132,7 +148,20 @@ export default function HomePage() {
       // Acumular KoTickets automáticamente
       accumulateKoTickets()
     }
-  }, [user?.id])
+  }, [user?.id, loadKoTickets, accumulateKoTickets])
+
+  // Escuchar eventos de actualización de KoTickets
+  useEffect(() => {
+    const handleKoTicketsUpdate = () => {
+      console.log('🔄 KoTickets actualizados, recargando...')
+      loadKoTickets()
+    }
+    
+    window.addEventListener('koticketsUpdated', handleKoTicketsUpdate)
+    return () => {
+      window.removeEventListener('koticketsUpdated', handleKoTicketsUpdate)
+    }
+  }, [loadKoTickets])
 
   const handleBuyTicket = async () => {
     if (!selectedNumber) {
@@ -245,12 +274,12 @@ export default function HomePage() {
       {user && (
         <UnscratchedTicketsIndicator
           unscratchedKoTicketsCount={koTickets.filter(ticket => !ticket.isScratched).length}
-          onScratchClick={() => openModal('scratch')}
+          onScratchClick={() => openModal('scratch-game')}
         />
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8 pb-20">
         <AnimatePresence mode="wait">
           {currentSection === 'home' && (
             <motion.div
@@ -268,7 +297,7 @@ export default function HomePage() {
                 onBuyTicket={() => openModal('buy')}
                 onViewStatus={() => openModal('status')}
                 onViewResults={() => showSection('results')}
-                onViewInfo={() => showSection('info')}
+                onViewInfo={() => openModal('info')}
               />
 
               {/* Countdown */}

@@ -55,7 +55,7 @@ export function UnscratchedTicketsIndicator({
               </h3>
             </div>
             <p className="text-xs text-white/70">
-              Haz clic para rascar y ganar 1-10 KOKI
+              Haz clic para rascar y ganar 2-10 KOKI
             </p>
           </div>
           

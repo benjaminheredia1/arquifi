@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run } from '@/lib/database-optimized'
+import { getUsers, getKoTickets, updateData } from '@/lib/supabase'
 import { generateScratchPrize } from '@/lib/lottery-system'
 
 export async function POST(request: NextRequest) {
   try {
     const { userId, koticketId } = await request.json()
+    console.log('🎫 Scratch request:', { userId, koticketId })
 
     if (!userId || !koticketId) {
+      console.log('❌ Missing userId or koticketId')
       return NextResponse.json(
         { success: false, error: 'User ID y KoTicket ID son requeridos' },
         { status: 400 }
       )
     }
 
+    // Convertir userId a número
+    const userIdNum = parseInt(userId)
+    if (isNaN(userIdNum)) {
+      return NextResponse.json(
+        { success: false, error: 'User ID inválido' },
+        { status: 400 }
+      )
+    }
+
     // Verificar que el usuario existe
-    const user = await getOne('SELECT * FROM users WHERE id = ?', [userId])
+    const users = await getUsers('id', [userIdNum])
+    const user = users[0] || null
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Usuario no encontrado' },
@@ -23,8 +35,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar que el KoTicket existe y pertenece al usuario
-    const koticket = await getOne('SELECT * FROM kotickets WHERE id = ? AND user_id = ?', [koticketId, userId])
+    const allKoTickets = await getKoTickets()
+    const koticket = allKoTickets.find(kt => kt.id === parseInt(koticketId) && kt.user_id === userIdNum)
+    console.log('🔍 KoTicket encontrado:', koticket)
+    
     if (!koticket) {
+      console.log('❌ KoTicket no encontrado')
       return NextResponse.json(
         { success: false, error: 'KoTicket no encontrado' },
         { status: 404 }
@@ -33,6 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar que el KoTicket no ha sido rascado
     if (koticket.is_scratched) {
+      console.log('❌ KoTicket ya rascado:', koticket.is_scratched)
       return NextResponse.json(
         { success: false, error: 'Este KoTicket ya ha sido rascado' },
         { status: 400 }
@@ -44,26 +61,30 @@ export async function POST(request: NextRequest) {
     const prizeAmount = prize.type === 'koki' ? prize.amount : 0
 
     // Actualizar el KoTicket como rascado
-    await run(`
-      UPDATE kotickets 
-      SET is_scratched = 1, prize_amount = ?, scratch_date = datetime('now')
-      WHERE id = ?
-    `, [prizeAmount, koticketId])
+    await updateData('kotickets', {
+      is_scratched: true,
+      prize_amount: prizeAmount,
+      scratch_date: new Date().toISOString()
+    }, { id: parseInt(koticketId) })
 
     // Actualizar el balance del usuario si ganó algo
     if (prizeAmount > 0) {
       const newBalance = user.balance + prizeAmount
-      await run('UPDATE users SET balance = ? WHERE id = ?', [newBalance, userId])
+      await updateData('users', { balance: newBalance }, { id: userIdNum })
 
-      // Registrar la transacción
-      await run(`
-        INSERT INTO transactions (user_id, type, amount, description, status)
-        VALUES (?, ?, ?, ?, ?)
-      `, [userId, 'win', prizeAmount, `Premio de KoTicket: ${prizeAmount} KOKI`, 'completed'])
+      // Registrar la transacción (comentado por ahora)
+      // await insertData('transactions', {
+      //   user_id: userIdNum,
+      //   type: 'win',
+      //   amount: prizeAmount,
+      //   description: `Premio de KoTicket: ${prizeAmount} KOKI`,
+      //   status: 'completed'
+      // })
     }
 
     // Obtener el usuario actualizado
-    const updatedUser = await getOne('SELECT * FROM users WHERE id = ?', [userId])
+    const updatedUsers = await getUsers('id', [userIdNum])
+    const updatedUser = updatedUsers[0] || null
 
     return NextResponse.json({
       success: true,
@@ -85,3 +106,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

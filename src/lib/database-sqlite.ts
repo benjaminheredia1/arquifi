@@ -4,19 +4,9 @@ import { promisify } from 'util'
 // Base de datos SQLite para desarrollo
 let db: Database | null = null
 
-// Cache en memoria para consultas frecuentes
-const cache = new Map<string, { data: any; timestamp: number }>()
-const CACHE_TTL = 30000 // 30 segundos
-
 export async function getDatabase() {
   if (!db) {
     db = new Database('./kokifi-lottery.db') // Base de datos persistente
-    
-    // Optimizaciones para mejor rendimiento
-    await db.run('PRAGMA journal_mode = WAL')
-    await db.run('PRAGMA synchronous = NORMAL')
-    await db.run('PRAGMA cache_size = 1000')
-    await db.run('PRAGMA temp_store = MEMORY')
     
     // Inicializar tablas
     await initializeDatabase()
@@ -62,8 +52,11 @@ export async function initializeDatabase() {
         end_date DATETIME DEFAULT (datetime('now', '+7 days')),
         winning_numbers TEXT,
         total_pool REAL DEFAULT 0,
+        total_tickets INTEGER DEFAULT 0,
         ticket_price REAL DEFAULT 10,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        winner_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (winner_id) REFERENCES users (id)
       )
     `)
 
@@ -105,6 +98,24 @@ export async function initializeDatabase() {
       console.log('Status column already exists or migration failed:', error)
     }
 
+    // Migración: Agregar columna winner_id a lotteries si no existe
+    try {
+      await run(`ALTER TABLE lotteries ADD COLUMN winner_id INTEGER`)
+      console.log('✅ Winner ID column added to lotteries table')
+    } catch (error) {
+      // La columna ya existe, ignorar el error
+      console.log('Winner ID column already exists or migration failed:', error)
+    }
+
+    // Migración: Agregar columna total_tickets a lotteries si no existe
+    try {
+      await run(`ALTER TABLE lotteries ADD COLUMN total_tickets INTEGER DEFAULT 0`)
+      console.log('✅ Total tickets column added to lotteries table')
+    } catch (error) {
+      // La columna ya existe, ignorar el error
+      console.log('Total tickets column already exists or migration failed:', error)
+    }
+
     // Crear tabla de historial de loterías
     await run(`
       CREATE TABLE IF NOT EXISTS lottery_history (
@@ -138,6 +149,9 @@ export async function initializeDatabase() {
     
     // Crear lotería activa
     await createActiveLottery()
+
+    // Crear loterías de ejemplo completadas
+    await createSampleCompletedLotteries()
 
     console.log('✅ SQLite database initialized successfully')
   } catch (error) {
@@ -209,51 +223,95 @@ export async function createActiveLottery() {
 }
 
 // Función para ejecutar consultas
-export async function query(sql: string, params: any[] = []) {
-  // Crear clave de caché
-  const cacheKey = `${sql}:${JSON.stringify(params)}`
-  
-  // Verificar caché
-  const cached = cache.get(cacheKey)
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data
-  }
-  
+export async function query(sql: string, params: (string | number | null)[] = []) {
   const database = await getDatabase()
   const all = dbAll(database)
-  const result = await all(sql, params)
-  
-  // Guardar en caché
-  cache.set(cacheKey, { data: result, timestamp: Date.now() })
-  
-  return result
+  return await all(sql, params)
 }
 
 // Función para obtener un registro
-export async function getOne(sql: string, params: any[] = []) {
-  // Crear clave de caché
-  const cacheKey = `getOne:${sql}:${JSON.stringify(params)}`
-  
-  // Verificar caché
-  const cached = cache.get(cacheKey)
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data
-  }
-  
+export async function getOne(sql: string, params: (string | number | null)[] = []) {
   const database = await getDatabase()
   const get = dbGet(database)
-  const result = await get(sql, params)
-  const finalResult = result || null
-  
-  // Guardar en caché
-  cache.set(cacheKey, { data: finalResult, timestamp: Date.now() })
-  
-  return finalResult
+  return await get(sql, params)
 }
 
 // Función para ejecutar una consulta
-export async function run(sql: string, params: any[] = []) {
+export async function run(sql: string, params: (string | number | null)[] = []) {
   const database = await getDatabase()
   const runQuery = dbRun(database)
   return await runQuery(sql, params)
+}
+
+// Función para crear loterías de ejemplo completadas
+export async function createSampleCompletedLotteries() {
+  const database = await getDatabase()
+  const run = dbRun(database)
+  const get = dbGet(database)
+  
+  try {
+    // Verificar si ya existen loterías completadas
+    const existingLotteries = await get('SELECT COUNT(*) as count FROM lotteries WHERE status = ?', ['completed'])
+    
+    if (existingLotteries.count > 0) {
+      console.log('Loterías completadas ya existen, saltando creación')
+      return
+    }
+
+    // Crear 3 loterías completadas de ejemplo
+    const sampleLotteries = [
+      {
+        status: 'completed',
+        start_date: '2025-08-15 00:00:00',
+        end_date: '2025-08-22 23:59:59',
+        ticket_price: 10,
+        total_tickets: 45,
+        total_pool: 450,
+        winning_numbers: JSON.stringify([7, 15, 23, 31, 42]),
+        winner_id: 1
+      },
+      {
+        status: 'completed',
+        start_date: '2025-08-22 00:00:00',
+        end_date: '2025-08-29 23:59:59',
+        ticket_price: 10,
+        total_tickets: 38,
+        total_pool: 380,
+        winning_numbers: JSON.stringify([3, 12, 28, 35, 47]),
+        winner_id: 1
+      },
+      {
+        status: 'completed',
+        start_date: '2025-08-29 00:00:00',
+        end_date: '2025-09-05 23:59:59',
+        ticket_price: 10,
+        total_tickets: 52,
+        total_pool: 520,
+        winning_numbers: JSON.stringify([5, 18, 26, 39, 44]),
+        winner_id: 1
+      }
+    ]
+
+    for (const lottery of sampleLotteries) {
+      await run(`
+        INSERT INTO lotteries (
+          status, start_date, end_date, ticket_price, 
+          total_tickets, total_pool, winning_numbers, winner_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        lottery.status,
+        lottery.start_date,
+        lottery.end_date,
+        lottery.ticket_price,
+        lottery.total_tickets,
+        lottery.total_pool,
+        lottery.winning_numbers,
+        lottery.winner_id
+      ])
+    }
+
+    console.log('✅ Loterías de ejemplo completadas creadas')
+  } catch (error) {
+    console.error('❌ Error creating sample completed lotteries:', error)
+  }
 }

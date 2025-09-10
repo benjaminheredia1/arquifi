@@ -1,107 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/database-optimized'
+import { getLotteries, getUsers } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('Getting lottery history...')
-    
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '20')
     const page = parseInt(searchParams.get('page') || '1')
 
-    // Obtener todas las loterías (completadas y activas)
-    const allLotteries = await query(`
-      SELECT * FROM lotteries 
-      ORDER BY created_at DESC
-    `)
+    // Obtener todas las loterías completadas desde Supabase
+    const allLotteries = await getLotteries('status', ['completed'])
+    const allUsers = await getUsers()
     
-    console.log('Found lotteries:', allLotteries.length)
-
-    // Si no hay loterías, crear una de ejemplo
-    if (allLotteries.length === 0) {
-      console.log('No lotteries found, creating sample...')
-      await query(`
-        INSERT INTO lotteries (start_time, end_time, ticket_price, total_tickets, total_pool, is_active, is_completed, winning_numbers, winners)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 días atrás
-        new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 día atrás
-        10,
-        5,
-        50,
-        false,
-        true,
-        JSON.stringify([7, 14, 21, 28, 35]),
-        JSON.stringify(['demo1@kokifi.com'])
-      ])
-      
-      // Obtener loterías actualizadas
-      const updatedLotteries = await query(`
-        SELECT * FROM lotteries 
-        ORDER BY created_at DESC
-      `)
-      
-      console.log('Created sample lottery, total now:', updatedLotteries.length)
-      
-      // Paginación
-      const startIndex = (page - 1) * limit
-      const endIndex = startIndex + limit
-      const paginatedLotteries = (updatedLotteries || []).slice(startIndex, endIndex)
-
-      // Mapear datos al formato esperado por el frontend
-      const mappedLotteries = paginatedLotteries.map((lottery: any) => ({
-        id: lottery.id.toString(),
-        startDate: lottery.start_time,
-        endDate: lottery.end_time,
-        winningNumbers: lottery.winning_numbers ? JSON.parse(lottery.winning_numbers) : [],
-        totalTickets: lottery.total_tickets || 0,
-        totalPrize: lottery.total_pool?.toString() || '0',
-        status: lottery.is_completed ? 'completed' : 'active',
-        winner: lottery.winners ? JSON.parse(lottery.winners)[0] : null
-      }))
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          lotteries: mappedLotteries,
-          pagination: {
-            page,
-            limit,
-            total: (updatedLotteries || []).length,
-            totalPages: Math.ceil((updatedLotteries || []).length / limit)
-          }
-        }
-      })
-    }
+    // Combinar datos de loterías con usuarios
+    const lotteriesWithUsers = allLotteries.map(lottery => {
+      const winner = lottery.winner_id ? allUsers.find(u => u.id === lottery.winner_id) : null
+      return {
+        ...lottery,
+        username: winner?.username || null,
+        display_name: winner?.display_name || null,
+        pfp_url: winner?.pfp_url || null
+      }
+    })
+    
+    // Ordenar por fecha de fin descendente
+    const sortedLotteries = lotteriesWithUsers.sort((a, b) => 
+      new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
+    )
 
     // Paginación
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
-    const paginatedLotteries = (allLotteries || []).slice(startIndex, endIndex)
+    const paginatedLotteries = sortedLotteries.slice(startIndex, endIndex)
 
-    // Mapear datos al formato esperado por el frontend
-    const mappedLotteries = paginatedLotteries.map((lottery: any) => ({
-      id: lottery.id.toString(),
-      startDate: lottery.start_time,
-      endDate: lottery.end_time,
-      winningNumbers: lottery.winning_numbers ? JSON.parse(lottery.winning_numbers) : [],
+    // Formatear los datos para el frontend
+    const lotteriesWithWinners = paginatedLotteries.map(lottery => ({
+      id: lottery.id,
+      status: lottery.status,
+      startTime: lottery.start_date,
+      endTime: lottery.end_date,
+      ticketPrice: lottery.ticket_price,
       totalTickets: lottery.total_tickets || 0,
-      totalPrize: lottery.total_pool?.toString() || '0',
-      status: lottery.is_completed ? 'completed' : 'active',
-      winner: lottery.winners ? JSON.parse(lottery.winners)[0] : null
+      totalPrize: lottery.total_pool,
+      winningNumbers: lottery.winning_numbers ? JSON.parse(lottery.winning_numbers) : [],
+      winnerInfo: lottery.winner_id ? {
+        id: lottery.winner_id,
+        username: lottery.username,
+        displayName: lottery.display_name,
+        pfpUrl: lottery.pfp_url
+      } : null
     }))
-
-    console.log('Returning lotteries:', mappedLotteries.length)
 
     return NextResponse.json({
       success: true,
       data: {
-        lotteries: mappedLotteries,
+        lotteries: lotteriesWithWinners,
         pagination: {
           page,
           limit,
-          total: (allLotteries || []).length,
-          totalPages: Math.ceil((allLotteries || []).length / limit)
+          total: sortedLotteries.length,
+          totalPages: Math.ceil(sortedLotteries.length / limit)
         }
       }
     })
@@ -109,11 +66,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Get lottery history error:', error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Error interno del servidor',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { success: false, error: 'Error interno del servidor' },
       { status: 500 }
     )
   }

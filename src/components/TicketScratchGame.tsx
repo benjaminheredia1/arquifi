@@ -2,35 +2,71 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Ticket, Star, Gift, Zap, X, Calendar, Clock } from 'lucide-react'
-import { canScratchTickets, generateScratchPrize, isScratchDay } from '@/lib/lottery-system'
+import { Ticket, Star, Gift, Zap, X, Calendar } from 'lucide-react'
+import { isScratchDay } from '@/lib/lottery-system'
 import toast from 'react-hot-toast'
 
 interface TicketScratchGameProps {
   onClose: () => void
-  koTickets: any[]
+  koTickets: Array<{
+    id: string
+    owner: string
+    purchaseTime: number
+    isScratched: boolean
+    prize?: number
+  }>
 }
 
-const SCRATCH_PRIZES = [
-  { type: 'koki', amount: 1, icon: Star, color: 'from-yellow-500 to-yellow-600', probability: 0.15 },
-  { type: 'koki', amount: 2, icon: Gift, color: 'from-green-500 to-green-600', probability: 0.15 },
-  { type: 'koki', amount: 3, icon: Zap, color: 'from-purple-500 to-purple-600', probability: 0.15 },
-  { type: 'koki', amount: 5, icon: Star, color: 'from-pink-500 to-pink-600', probability: 0.15 },
-  { type: 'koki', amount: 7, icon: Gift, color: 'from-blue-500 to-blue-600', probability: 0.1 },
-  { type: 'koki', amount: 10, icon: Zap, color: 'from-red-500 to-red-600', probability: 0.05 },
-  { type: 'nothing', amount: 0, icon: X, color: 'from-gray-500 to-gray-600', probability: 0.25 }
-]
 
 export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps) {
   const [currentTicket, setCurrentTicket] = useState(0)
   const [scratchedTickets, setScratchedTickets] = useState<boolean[]>([])
-  const [prizes, setPrizes] = useState<any[]>([])
+  const [prizes, setPrizes] = useState<Array<{
+    type: string
+    amount: number
+    icon: any
+    color: string
+  } | null>>([])
   const [isScratching, setIsScratching] = useState(false)
   const [totalWinnings, setTotalWinnings] = useState(0)
   
-  const scratchDayInfo = isScratchDay()
+  useEffect(() => {
+    // Inicializar tickets rayados
+    if (koTickets && koTickets.length > 0) {
+      setScratchedTickets(new Array(koTickets.length).fill(false))
+      setPrizes(new Array(koTickets.length).fill(null))
+    }
+  }, [koTickets])
   
-  // Verificar si hay KoTickets
+  // Si no hay KoTickets, crear uno automáticamente
+  useEffect(() => {
+    if (!koTickets || koTickets.length === 0) {
+      // Crear un KoTicket automáticamente
+      fetch('/api/kotickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: koTickets?.[0]?.owner || '2', // Usar el owner del primer ticket o default 2
+          quantity: 1
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          console.log('🎫 KoTicket creado automáticamente')
+          // Recargar la página para mostrar el KoTicket
+          window.location.reload()
+        }
+      })
+      .catch(error => {
+        console.error('Error creando KoTicket:', error)
+      })
+    }
+  }, [koTickets])
+
+  // Mostrar loading mientras se crean los KoTickets
   if (!koTickets || koTickets.length === 0) {
     return (
       <motion.div
@@ -52,28 +88,16 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
             <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center">
               <Ticket className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">No tienes KoTickets</h2>
+            <h2 className="text-xl font-bold text-white mb-2">Creando KoTicket...</h2>
             <p className="text-white/70 mb-6">
-              ¡Obtén KoTickets GRATIS para rascar y ganar KOKI!<br/>
-              <span className="text-blue-300 text-sm">💡 Necesitas al menos 100 KOKI para acceder</span>
+              ¡Preparando tu KoTicket GRATIS para rascar y ganar KOKI!
             </p>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all"
-            >
-              Obtener KoTickets GRATIS
-            </button>
+            <div className="animate-spin w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full mx-auto"></div>
           </div>
         </motion.div>
       </motion.div>
     )
   }
-
-  useEffect(() => {
-    // Inicializar tickets rayados
-    setScratchedTickets(new Array(koTickets.length).fill(false))
-    setPrizes(new Array(koTickets.length).fill(null))
-  }, [koTickets])
 
   const scratchTicket = async (ticketIndex: number) => {
     if (scratchedTickets[ticketIndex] || isScratching) return
@@ -91,7 +115,7 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: currentKoTicket.user_id,
+          userId: currentKoTicket.owner,
           koticketId: currentKoTicket.id
         }),
       })
@@ -126,9 +150,16 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
         // Mostrar mensaje de premio usando toast
         if (prize.amount > 0) {
           toast.success(`¡${prize.message}`)
+          // Actualizar el balance del usuario en el contexto
+          if (result.data.user) {
+            window.dispatchEvent(new CustomEvent('userUpdated', { detail: result.data.user }))
+          }
         } else {
           toast(prize.message, { icon: 'ℹ️' })
         }
+        
+        // Recargar KoTickets para actualizar la burbuja
+        window.dispatchEvent(new CustomEvent('koticketsUpdated'))
       } else {
         toast.error(result.error || 'Error al rascar el ticket')
       }

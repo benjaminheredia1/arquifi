@@ -141,6 +141,11 @@ export function useLottery(user?: any) {
         // Reload lottery info and user tickets
         await loadLotteryInfo()
         await loadUserTickets()
+        // Update user data if provided
+        if (result.data?.user) {
+          // Trigger user update in parent component
+          window.dispatchEvent(new CustomEvent('userUpdated', { detail: result.data.user }))
+        }
         return true
       } else {
         toast.error(result.error || 'Error al comprar ticket')
@@ -153,7 +158,7 @@ export function useLottery(user?: any) {
     } finally {
       setIsLoading(false)
     }
-  }, [user, loadLotteryInfo])
+  }, [user, loadLotteryInfo, loadUserTickets])
 
   const loadLotteryResults = useCallback(async (limit: number = 5) => {
     try {

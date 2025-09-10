@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run, query } from '@/lib/database-optimized'
+import { getOne, run, query } from '@/lib/database-sqlite'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const todayKoTickets = await query(`
       SELECT COUNT(*) as count 
       FROM kotickets 
-      WHERE owner_id = ? AND DATE(purchase_time) = ?
+      WHERE user_id = ? AND DATE(purchase_time) = ?
     `, [userId, today])
 
     const hasKoTicketToday = todayKoTickets[0]?.count > 0
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
 
     // Crear un KoTicket acumulado (gratis)
     await run(`
-      INSERT INTO kotickets (owner_id, purchase_time)
-      VALUES (?, datetime('now'))
-    `, [userId]) // Sin precio = GRATIS
+      INSERT INTO kotickets (user_id, price, purchase_time)
+      VALUES (?, ?, datetime('now'))
+    `, [userId, 0]) // Precio 0 = GRATIS
 
     const newKoTicket = await getOne('SELECT * FROM kotickets WHERE id = last_insert_rowid()')
 
@@ -66,3 +66,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

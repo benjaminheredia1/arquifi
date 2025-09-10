@@ -1,47 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { query, getOne, run } from '@/lib/database-optimized'
+import { NextResponse } from 'next/server'
+import { getLotteries, insertData } from '@/lib/supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get current lottery status
-    const lotteryQuery = await getOne(`
-      SELECT 
-        id,
-        is_active,
-        start_time,
-        end_time,
-        winning_numbers,
-        total_pool,
-        ticket_price,
-        created_at
-      FROM lotteries 
-      WHERE is_active = 1 
-      ORDER BY created_at DESC 
-      LIMIT 1
-    `)
+    const lotteries = await getLotteries('status', ['active'])
+    let lottery = lotteries[0] || null
 
-    let lottery = lotteryQuery
     if (!lottery) {
       // Create a new lottery if none exists
-      const endTime = new Date()
-      endTime.setDate(endTime.getDate() + 7) // 7 días desde ahora
+      const now = new Date()
+      const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
       
-      await run(`
-        INSERT INTO lotteries (start_time, end_time, ticket_price, total_pool, is_active, is_completed)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `, [
-        new Date(),
-        endTime,
-        10,
-        0,
-        true,
-        false
-      ])
-      lottery = await getOne('SELECT * FROM lotteries WHERE id = last_insert_rowid()')
+      const newLottery = await insertData('lotteries', {
+        status: 'active',
+        start_date: now.toISOString(),
+        end_date: endDate.toISOString(),
+        ticket_price: 10,
+        total_pool: 0
+      })
+      lottery = newLottery[0]
     }
 
     // Calculate countdown
-    const endDate = new Date(lottery.end_time)
+    const endDate = new Date(lottery.end_date)
     const now = new Date()
     const timeLeft = endDate.getTime() - now.getTime()
 
@@ -55,14 +37,14 @@ export async function GET(request: NextRequest) {
       data: {
         lottery: {
           id: lottery.id,
-          status: lottery.is_active ? 'active' : 'completed',
+          status: lottery.status,
           ticketPrice: lottery.ticket_price,
           totalPool: lottery.total_pool,
           totalPrize: lottery.total_pool, // Alias para compatibilidad
           winningNumbers: lottery.winning_numbers,
-          startDate: lottery.start_time,
-          endDate: lottery.end_time,
-          endTime: lottery.end_time // Para el countdown
+          startDate: lottery.start_date,
+          endDate: lottery.end_date,
+          endTime: lottery.end_date // Para el countdown
         },
         countdown: {
           days: Math.max(0, days),

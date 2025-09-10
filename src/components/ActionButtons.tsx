@@ -50,7 +50,7 @@ export function ActionButtons({
     {
       icon: Info,
       label: 'Información',
-      description: 'Sobre KoquiFI Lottery',
+      description: 'Sobre KokiFi Lottery',
       onClick: onViewInfo,
       gradient: 'from-green-500 to-green-600',
       hoverGradient: 'from-green-400 to-green-500',

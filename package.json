@@ -16,9 +16,7 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run contracts:deploy-local\""
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.1",
     "@neynar/nodejs-sdk": "^2.0.0",
-    "@planetscale/database": "^1.19.0",
     "@supabase/supabase-js": "^2.57.4",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",

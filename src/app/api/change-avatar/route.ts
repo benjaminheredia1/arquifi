@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run } from '@/lib/database-optimized'
+import { getOne, run } from '@/lib/database-supabase'
 
 export async function POST(request: NextRequest) {
   try {

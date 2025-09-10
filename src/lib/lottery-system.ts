@@ -170,19 +170,11 @@ export function canScratchTickets(): boolean {
   return true
 }
 
-// Función para generar premios de rascar (1-10 KOKI)
+// Función para generar premios de rascar (2-10 KOKI)
 export function generateScratchPrize(): { amount: number; type: 'koki' | 'nothing' } {
-  const random = Math.random()
-  
-  // 70% probabilidad de ganar algo
-  if (random < 0.7) {
-    // Premio entre 1-10 KOKI
-    const amount = Math.floor(Math.random() * 10) + 1
-    return { amount, type: 'koki' }
-  }
-  
-  // 30% probabilidad de no ganar nada
-  return { amount: 0, type: 'nothing' }
+  // Siempre ganar algo, entre 2-10 KOKI
+  const amount = Math.floor(Math.random() * 9) + 2 // 2-10 KOKI
+  return { amount, type: 'koki' }
 }
 
 // Función para obtener el nombre del día

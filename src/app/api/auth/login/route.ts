@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne } from '@/lib/database-optimized'
+import { getUsers } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +12,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuario en la base de datos SQLite
-    const user = await getOne('SELECT * FROM users WHERE email = ?', [email])
+    // Buscar usuario en Supabase
+    const users = await getUsers('email', [email])
+    const user = users[0] || null
 
     if (!user) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Ticket, Calendar, Hash, Trophy, Clock } from 'lucide-react'
 import { User, Ticket as TicketType } from '@/types'
@@ -13,27 +13,47 @@ export function UserTickets({ user }: UserTicketsProps) {
   const [tickets, setTickets] = useState<TicketType[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  const loadUserTickets = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      console.log('🔍 Cargando tickets para usuario:', user?.id)
+      const response = await fetch(`/api/user-tickets?userId=${user?.id}`)
+      const data = await response.json()
+      
+      console.log('📊 Respuesta de la API:', data)
+      
+      if (data.success) {
+        console.log('✅ Tickets cargados:', data.data.tickets)
+        setTickets(data.data.tickets || [])
+      } else {
+        console.error('❌ Error en la respuesta:', data.error)
+      }
+    } catch (error) {
+      console.error('❌ Error loading tickets:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user?.id])
+
   useEffect(() => {
     if (user?.id) {
       loadUserTickets()
     }
-  }, [user?.id])
+  }, [user?.id, loadUserTickets])
 
-  const loadUserTickets = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch(`/api/user-tickets?userId=${user?.id}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setTickets(data.data.tickets || [])
-      }
-    } catch (error) {
-      console.error('Error loading tickets:', error)
-    } finally {
-      setIsLoading(false)
+  // Escuchar eventos de actualización de usuario (cuando se compra un ticket)
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      console.log('🔄 Usuario actualizado, recargando tickets...')
+      loadUserTickets()
     }
-  }
+
+    window.addEventListener('userUpdated', handleUserUpdate)
+    
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate)
+    }
+  }, [loadUserTickets])
 
   if (!user) {
     return (
@@ -55,7 +75,7 @@ export function UserTickets({ user }: UserTicketsProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-24 sm:pb-28">
       {/* Header */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-4">
@@ -75,7 +95,7 @@ export function UserTickets({ user }: UserTicketsProps) {
         </div>
         <div className="flex justify-center space-x-6 text-center">
           <div className="bg-white/5 rounded-lg p-4">
-            <div className="text-2xl font-bold text-primary-400">{user.ticketsCount || 0}</div>
+            <div className="text-2xl font-bold text-primary-400">{tickets.length}</div>
             <div className="text-white/70 text-sm">Tickets</div>
           </div>
           <div className="bg-white/5 rounded-lg p-4">
@@ -116,7 +136,7 @@ export function UserTickets({ user }: UserTicketsProps) {
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-white">#{ticket.number}</div>
-                      <div className="text-white/70 text-sm">Ticket ID: {ticket.id.toString().slice(-8)}</div>
+                      <div className="text-white/70 text-sm">Ticket ID: {ticket.id}</div>
                     </div>
                   </div>
                   

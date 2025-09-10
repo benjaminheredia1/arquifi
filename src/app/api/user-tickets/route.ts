@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/database-optimized'
+import { getTickets } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,14 +13,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user tickets
-    const tickets = await query(
-      'SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC',
-      [userId]
-    )
+    // Get user tickets using specific function
+    const allTickets = await getTickets()
+    const userTickets = allTickets.filter(ticket => ticket.user_id === parseInt(userId))
 
     // Mapear los campos para que coincidan con el frontend
-    const mappedTickets = (tickets || []).map(ticket => ({
+    const mappedTickets = userTickets.map(ticket => ({
       ...ticket,
       purchaseTime: new Date(ticket.created_at).getTime() / 1000, // Convertir a timestamp
       isWinner: false // Por ahora todos son false
