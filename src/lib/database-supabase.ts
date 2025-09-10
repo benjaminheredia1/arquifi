@@ -1,4 +1,4 @@
-import { supabase, query, getOne, run } from './supabase'
+import { supabase, querySQL, getUsers, getLotteries, insertData, updateData } from './supabase'
 
 // Función para inicializar la base de datos
 export async function initializeDatabase() {
@@ -6,7 +6,7 @@ export async function initializeDatabase() {
     console.log('🔄 Initializing Supabase database...')
 
     // Crear tabla de usuarios
-    await run(`
+    await querySQL(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
@@ -25,7 +25,7 @@ export async function initializeDatabase() {
     `)
 
     // Crear tabla de loterías
-    await run(`
+    await querySQL(`
       CREATE TABLE IF NOT EXISTS lotteries (
         id SERIAL PRIMARY KEY,
         status VARCHAR(20) DEFAULT 'active',
@@ -42,7 +42,7 @@ export async function initializeDatabase() {
     `)
 
     // Crear tabla de tickets
-    await run(`
+    await querySQL(`
       CREATE TABLE IF NOT EXISTS tickets (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
@@ -56,7 +56,7 @@ export async function initializeDatabase() {
     `)
 
     // Crear tabla de transacciones
-    await run(`
+    await querySQL(`
       CREATE TABLE IF NOT EXISTS transactions (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
@@ -70,7 +70,7 @@ export async function initializeDatabase() {
     `)
 
     // Crear tabla de KoTickets
-    await run(`
+    await querySQL(`
       CREATE TABLE IF NOT EXISTS kotickets (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
@@ -102,10 +102,11 @@ export async function initializeDatabase() {
 export async function createDemoUser() {
   try {
     // Verificar si ya existe el usuario demo
-    const existingUser = await getOne('SELECT * FROM users WHERE username = $1', ['demo1'])
+    const existingUsers = await getUsers('username', ['demo1'])
+    const existingUser = existingUsers[0] || null
     
     if (!existingUser) {
-      await run(`
+      await querySQL(`
         INSERT INTO users (id, username, email, password, fid, display_name, pfp_url, address, balance, tickets_count, is_verified)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       `, [
@@ -132,10 +133,11 @@ export async function createDemoUser() {
 export async function createActiveLottery() {
   try {
     // Verificar si ya existe una lotería activa
-    const existingLottery = await getOne('SELECT * FROM lotteries WHERE status = $1', ['active'])
+    const existingLotteries = await getLotteries('status', ['active'])
+    const existingLottery = existingLotteries[0] || null
     
     if (!existingLottery) {
-      await run(`
+      await querySQL(`
         INSERT INTO lotteries (status, start_date, end_date, ticket_price, total_pool, total_tickets)
         VALUES ($1, $2, $3, $4, $5, $6)
       `, [
@@ -157,7 +159,8 @@ export async function createActiveLottery() {
 export async function createSampleCompletedLotteries() {
   try {
     // Verificar si ya existen loterías completadas
-    const existingLotteries = await getOne('SELECT COUNT(*) as count FROM lotteries WHERE status = $1', ['completed'])
+    const completedLotteries = await getLotteries('status', ['completed'])
+    const existingLotteries = { count: completedLotteries.length }
     
     if (existingLotteries.count > 0) {
       console.log('Loterías completadas ya existen, saltando creación')
@@ -199,7 +202,7 @@ export async function createSampleCompletedLotteries() {
     ]
 
     for (const lottery of sampleLotteries) {
-      await run(`
+      await querySQL(`
         INSERT INTO lotteries (
           status, start_date, end_date, ticket_price, 
           total_tickets, total_pool, winning_numbers, winner_id
@@ -223,4 +226,4 @@ export async function createSampleCompletedLotteries() {
 }
 
 // Exportar funciones para uso en APIs
-export { query, getOne, run }
+export { querySQL, getUsers, getLotteries, insertData, updateData }
