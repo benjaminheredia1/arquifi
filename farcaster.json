@@ -4,13 +4,13 @@
   "subtitle": "Juega y gana KOKI en la lotería descentralizada",
   "primaryCategory": "Games",
   "screenshotUrls": [
-    "https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=600&fit=crop"
+    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg",
+    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_bdb9693a_kwr0qx.jpg",
+    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.31_da54b47f_hov8hm.jpg"
   ],
   "previewImage": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
   "heroImage": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545505/20250910_1853_Pato_Revisando_Tickets_remix_01k4tx75x9fnbset9ehrssfkby_wyijzz.png",
-  "splashScreenImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1080&h=1920&fit=crop",
+  "splashScreenImage": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757546123/20250910_1914_Pato_y_Tickets_Digitales_remix_01k4tydv7efdvbfh2zg6kcx8gx_kxavwj.png",
   "splashBackgroundColor": "#1a1a2e",
   "tags": [
     "lottery",
