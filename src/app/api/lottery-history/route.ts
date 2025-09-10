@@ -48,10 +48,22 @@ export async function GET(request: NextRequest) {
       const endIndex = startIndex + limit
       const paginatedLotteries = (updatedLotteries || []).slice(startIndex, endIndex)
 
+      // Mapear datos al formato esperado por el frontend
+      const mappedLotteries = paginatedLotteries.map((lottery: any) => ({
+        id: lottery.id.toString(),
+        startDate: lottery.start_time,
+        endDate: lottery.end_time,
+        winningNumbers: lottery.winning_numbers ? JSON.parse(lottery.winning_numbers) : [],
+        totalTickets: lottery.total_tickets || 0,
+        totalPrize: lottery.total_pool?.toString() || '0',
+        status: lottery.is_completed ? 'completed' : 'active',
+        winner: lottery.winners ? JSON.parse(lottery.winners)[0] : null
+      }))
+
       return NextResponse.json({
         success: true,
         data: {
-          lotteries: paginatedLotteries,
+          lotteries: mappedLotteries,
           pagination: {
             page,
             limit,
@@ -67,12 +79,24 @@ export async function GET(request: NextRequest) {
     const endIndex = startIndex + limit
     const paginatedLotteries = (allLotteries || []).slice(startIndex, endIndex)
 
-    console.log('Returning lotteries:', paginatedLotteries.length)
+    // Mapear datos al formato esperado por el frontend
+    const mappedLotteries = paginatedLotteries.map((lottery: any) => ({
+      id: lottery.id.toString(),
+      startDate: lottery.start_time,
+      endDate: lottery.end_time,
+      winningNumbers: lottery.winning_numbers ? JSON.parse(lottery.winning_numbers) : [],
+      totalTickets: lottery.total_tickets || 0,
+      totalPrize: lottery.total_pool?.toString() || '0',
+      status: lottery.is_completed ? 'completed' : 'active',
+      winner: lottery.winners ? JSON.parse(lottery.winners)[0] : null
+    }))
+
+    console.log('Returning lotteries:', mappedLotteries.length)
 
     return NextResponse.json({
       success: true,
       data: {
-        lotteries: paginatedLotteries,
+        lotteries: mappedLotteries,
         pagination: {
           page,
           limit,

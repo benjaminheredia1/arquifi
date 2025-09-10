@@ -143,18 +143,22 @@ export function LotteryHistory({ user }: LotteryHistoryProps) {
               <div className="mb-4">
                 <h4 className="text-white/80 font-medium mb-2">Números Ganadores:</h4>
                 <div className="flex flex-wrap gap-2">
-                  {lottery.winningNumbers.map((number, idx) => (
-                    <div
-                      key={idx}
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
-                        isUserWinner(lottery)
-                          ? 'bg-yellow-400 text-black'
-                          : 'bg-primary-500 text-white'
-                      }`}
-                    >
-                      {number}
-                    </div>
-                  ))}
+                  {lottery.winningNumbers && Array.isArray(lottery.winningNumbers) ? (
+                    lottery.winningNumbers.map((number, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
+                          isUserWinner(lottery)
+                            ? 'bg-yellow-400 text-black'
+                            : 'bg-primary-500 text-white'
+                        }`}
+                      >
+                        {number}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-white/60 text-sm">Números no disponibles</div>
+                  )}
                 </div>
               </div>
 
