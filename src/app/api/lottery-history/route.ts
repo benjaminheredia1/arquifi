@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAll } from '@/lib/database-sqlite'
+import { query } from '@/lib/database-sqlite'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
 
     // Obtener todas las loterías completadas
-    const allLotteries = await getAll(`
+    const allLotteries = await query(`
       SELECT * FROM lotteries 
       WHERE is_completed = 1 
       ORDER BY end_time DESC
