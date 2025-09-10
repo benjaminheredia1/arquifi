@@ -4,9 +4,19 @@ import { promisify } from 'util'
 // Base de datos SQLite para desarrollo
 let db: Database | null = null
 
+// Cache en memoria para consultas frecuentes
+const cache = new Map<string, { data: any; timestamp: number }>()
+const CACHE_TTL = 30000 // 30 segundos
+
 export async function getDatabase() {
   if (!db) {
     db = new Database('./kokifi-lottery.db') // Base de datos persistente
+    
+    // Optimizaciones para mejor rendimiento
+    await db.run('PRAGMA journal_mode = WAL')
+    await db.run('PRAGMA synchronous = NORMAL')
+    await db.run('PRAGMA cache_size = 1000')
+    await db.run('PRAGMA temp_store = MEMORY')
     
     // Inicializar tablas
     await initializeDatabase()
@@ -200,16 +210,45 @@ export async function createActiveLottery() {
 
 // Función para ejecutar consultas
 export async function query(sql: string, params: any[] = []) {
+  // Crear clave de caché
+  const cacheKey = `${sql}:${JSON.stringify(params)}`
+  
+  // Verificar caché
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data
+  }
+  
   const database = await getDatabase()
   const all = dbAll(database)
-  return await all(sql, params)
+  const result = await all(sql, params)
+  
+  // Guardar en caché
+  cache.set(cacheKey, { data: result, timestamp: Date.now() })
+  
+  return result
 }
 
 // Función para obtener un registro
 export async function getOne(sql: string, params: any[] = []) {
+  // Crear clave de caché
+  const cacheKey = `getOne:${sql}:${JSON.stringify(params)}`
+  
+  // Verificar caché
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data
+  }
+  
   const database = await getDatabase()
   const get = dbGet(database)
-  return await get(sql, params)
+  const result = await get(sql, params)
+  const finalResult = result || null
+  
+  // Guardar en caché
+  cache.set(cacheKey, { data: finalResult, timestamp: Date.now() })
+  
+  return finalResult
 }
 
 // Función para ejecutar una consulta
