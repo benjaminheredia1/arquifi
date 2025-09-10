@@ -3,7 +3,7 @@
   "iconUrl": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757543183/20250910_1824_Icono_Personalizado_remix_01k4tvm6xcfb4rv3aq5b572nw8_n9sod9.png",
   "subtitle": "Juega y gana KOKI en la lotería descentralizada",
   "description": "KokiFi Lottery es una web o aplicacion de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
-  "primaryCategory": "games",
+  "primaryCategory": "Games",
   "screenshotUrls": [
     "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg"
   ],
@@ -22,7 +22,7 @@
   "ogTitle": "KokiFi Lottery",
   "ogDescription": "Gana premios en KOKI. La primera lotería descentralizada en Farcaster",
   "ogImageUrl": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
-  "castShareUrl": "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery-m94t8w2cw-carla-loayzas-projects.vercel.app",
-  "homeUrl": "https://koqui-fi-lottery-m94t8w2cw-carla-loayzas-projects.vercel.app",
-  "webhookUrl": "https://koqui-fi-lottery-m94t8w2cw-carla-loayzas-projects.vercel.app/api/webhook"
+  "castShareUrl": "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery-bpja67cjs-carla-loayzas-projects.vercel.app",
+  "homeUrl": "https://koqui-fi-lottery-bpja67cjs-carla-loayzas-projects.vercel.app",
+  "webhookUrl": "https://koqui-fi-lottery-bpja67cjs-carla-loayzas-projects.vercel.app/api/webhook"
 }
