@@ -1,0 +1,47 @@
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  const manifest = {
+    name: "KokiFi Lottery",
+    iconUrl: "https://koqui-fi-lottery.vercel.app/icon.png",
+    subtitle: "Juega y gana KOKI en la lotería descentralizada",
+    description: "KokiFi Lottery es una aplicación de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
+    primaryCategory: "games",
+    screenshotUrls: [
+      "https://koqui-fi-lottery.vercel.app/screenshot1.png",
+      "https://koqui-fi-lottery.vercel.app/screenshot2.png",
+      "https://koqui-fi-lottery.vercel.app/screenshot3.png"
+    ],
+    imageUrl: "https://koqui-fi-lottery.vercel.app/preview.png",
+    heroImageUrl: "https://koqui-fi-lottery.vercel.app/hero.png",
+    splashImageUrl: "https://koqui-fi-lottery.vercel.app/splash.png",
+    splashBackgroundColor: "#1a1a2e",
+    tags: [
+      "lottery",
+      "gaming",
+      "blockchain",
+      "crypto",
+      "defi",
+      "kokifi",
+      "prizes",
+      "tickets"
+    ],
+    tagline: "Juega, Rasca y Gana en la Lotería Descentralizada",
+    buttonTitle: "Jugar Ahora",
+    ogTitle: "KokiFi Lottery - Lotería Descentralizada",
+    ogDescription: "Compra tickets, rasca KoTickets y gana premios en KOKI. La primera lotería descentralizada en Farcaster.",
+    ogImageUrl: "https://koqui-fi-lottery.vercel.app/og-image.png",
+    castShareUrl: "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery.vercel.app",
+    homeUrl: "https://koqui-fi-lottery.vercel.app",
+    webhookUrl: "https://koqui-fi-lottery.vercel.app/api/webhook"
+  }
+
+  return NextResponse.json(manifest, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
