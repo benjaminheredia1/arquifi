@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { database } from '@/lib/database'
+import { getAll } from '@/lib/database-sqlite'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,33 +8,21 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
 
     // Obtener todas las loterías completadas
-    const allLotteries = Array.from(database.lotteries.values())
-      .filter(lottery => lottery.status === 'completed')
-      .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
+    const allLotteries = await getAll(`
+      SELECT * FROM lotteries 
+      WHERE is_completed = 1 
+      ORDER BY end_time DESC
+    `)
 
     // Paginación
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
     const paginatedLotteries = allLotteries.slice(startIndex, endIndex)
 
-    // Obtener información de los ganadores
-    const lotteriesWithWinners = paginatedLotteries.map(lottery => {
-      const winner = lottery.winner ? database.getUserById(lottery.winner) : null
-      return {
-        ...lottery,
-        winnerInfo: winner ? {
-          id: winner.id,
-          username: winner.username,
-          displayName: winner.displayName,
-          pfpUrl: winner.pfpUrl
-        } : null
-      }
-    })
-
     return NextResponse.json({
       success: true,
       data: {
-        lotteries: lotteriesWithWinners,
+        lotteries: paginatedLotteries,
         pagination: {
           page,
           limit,
