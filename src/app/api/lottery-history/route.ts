@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@/lib/database-neon'
+import { query } from '@/lib/database-optimized'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,9 +8,9 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
 
     // Obtener todas las loterías completadas
-    const allLotteries = await sql(`
+    const allLotteries = await query(`
       SELECT * FROM lotteries 
-      WHERE is_completed = TRUE 
+      WHERE is_completed = 1 
       ORDER BY end_time DESC
     `)
 
