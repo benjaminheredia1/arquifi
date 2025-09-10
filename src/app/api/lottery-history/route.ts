@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/database-sqlite'
+import { supabase } from '@/lib/database-supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,16 +8,21 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
 
     // Obtener todas las loterías completadas
-    const allLotteries = await query(`
-      SELECT * FROM lotteries 
-      WHERE is_completed = 1 
-      ORDER BY end_time DESC
-    `)
+    const { data: allLotteries, error } = await supabase
+      .from('lotteries')
+      .select('*')
+      .eq('is_completed', true)
+      .order('end_time', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching lotteries:', error)
+      throw error
+    }
 
     // Paginación
     const startIndex = (page - 1) * limit
     const endIndex = startIndex + limit
-    const paginatedLotteries = allLotteries.slice(startIndex, endIndex)
+    const paginatedLotteries = (allLotteries || []).slice(startIndex, endIndex)
 
     return NextResponse.json({
       success: true,
@@ -26,8 +31,8 @@ export async function GET(request: NextRequest) {
         pagination: {
           page,
           limit,
-          total: allLotteries.length,
-          totalPages: Math.ceil(allLotteries.length / limit)
+          total: (allLotteries || []).length,
+          totalPages: Math.ceil((allLotteries || []).length / limit)
         }
       }
     })
