@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run } from '@/lib/database-supabase'
+import { getUsers, updateData } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
     console.log('Numeric user ID:', numericUserId)
 
     // Obtener usuario actual
-    const user = await getOne('SELECT * FROM users WHERE id = ?', [numericUserId])
+    const users = await getUsers('id', [numericUserId])
+    const user = users[0] || null
     console.log('User found:', user ? 'Yes' : 'No', user ? `ID: ${user.id}` : '')
     
     if (!user) {
@@ -30,10 +31,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Actualizar avatar del usuario
-    await run('UPDATE users SET pfp_url = ? WHERE id = ?', [avatarUrl, numericUserId])
+    await updateData('users', { pfp_url: avatarUrl }, { id: numericUserId })
 
     // Obtener usuario actualizado
-    const updatedUser = await getOne('SELECT * FROM users WHERE id = ?', [numericUserId])
+    const updatedUsers = await getUsers('id', [numericUserId])
+    const updatedUser = updatedUsers[0] || null
 
     if (!updatedUser) {
       return NextResponse.json(
