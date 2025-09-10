@@ -1,0 +1,8 @@
+{
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://ytdnarbywbhyxjkrobyr.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZG5hcmJ5d2JoeXhqa3JvYnlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0OTQ1NDUsImV4cCI6MjA3MzA3MDU0NX0.EfO2JbHDlN9A6bohv_ZLfBxOrq3i3qtWGRGvxQJ0Gw"
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next"
+}
