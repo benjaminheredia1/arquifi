@@ -120,7 +120,7 @@ export async function createDemoUser() {
         '0x1234567890abcdef',
         1000.00,
         0,
-        true
+        1
       ])
       console.log('✅ Demo user created')
     }
