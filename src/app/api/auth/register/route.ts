@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getOne, run } from '@/lib/database-sqlite'
+import { getOne, run } from '@/lib/database-optimized'
 
 // Lista de avatares con animalitos animados y bonitos
 const AVATAR_OPTIONS = [
