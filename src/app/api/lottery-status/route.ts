@@ -7,15 +7,15 @@ export async function GET(request: NextRequest) {
     const lotteryQuery = await getOne(`
       SELECT 
         id,
-        status,
-        start_date,
-        end_date,
+        is_active,
+        start_time,
+        end_time,
         winning_numbers,
         total_pool,
         ticket_price,
         created_at
       FROM lotteries 
-      WHERE status = 'active' 
+      WHERE is_active = 1 
       ORDER BY created_at DESC 
       LIMIT 1
     `)
@@ -23,15 +23,25 @@ export async function GET(request: NextRequest) {
     let lottery = lotteryQuery
     if (!lottery) {
       // Create a new lottery if none exists
+      const endTime = new Date()
+      endTime.setDate(endTime.getDate() + 7) // 7 días desde ahora
+      
       await run(`
-        INSERT INTO lotteries (status, start_date, end_date, ticket_price, total_pool)
-        VALUES ('active', datetime('now'), datetime('now', '+7 days'), 10, 0)
-      `)
+        INSERT INTO lotteries (start_time, end_time, ticket_price, total_pool, is_active, is_completed)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `, [
+        new Date(),
+        endTime,
+        10,
+        0,
+        true,
+        false
+      ])
       lottery = await getOne('SELECT * FROM lotteries WHERE id = last_insert_rowid()')
     }
 
     // Calculate countdown
-    const endDate = new Date(lottery.end_date)
+    const endDate = new Date(lottery.end_time)
     const now = new Date()
     const timeLeft = endDate.getTime() - now.getTime()
 
@@ -45,14 +55,14 @@ export async function GET(request: NextRequest) {
       data: {
         lottery: {
           id: lottery.id,
-          status: lottery.status,
+          status: lottery.is_active ? 'active' : 'completed',
           ticketPrice: lottery.ticket_price,
           totalPool: lottery.total_pool,
           totalPrize: lottery.total_pool, // Alias para compatibilidad
           winningNumbers: lottery.winning_numbers,
-          startDate: lottery.start_date,
-          endDate: lottery.end_date,
-          endTime: lottery.end_date // Para el countdown
+          startDate: lottery.start_time,
+          endDate: lottery.end_time,
+          endTime: lottery.end_time // Para el countdown
         },
         countdown: {
           days: Math.max(0, days),

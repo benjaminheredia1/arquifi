@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const todayKoTickets = await query(`
       SELECT COUNT(*) as count 
       FROM kotickets 
-      WHERE user_id = ? AND DATE(purchase_time) = ?
+      WHERE owner_id = ? AND DATE(purchase_time) = ?
     `, [userId, today])
 
     const hasKoTicketToday = todayKoTickets[0]?.count > 0
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
 
     // Crear un KoTicket acumulado (gratis)
     await run(`
-      INSERT INTO kotickets (user_id, price, purchase_time)
-      VALUES (?, ?, datetime('now'))
-    `, [userId, 0]) // Precio 0 = GRATIS
+      INSERT INTO kotickets (owner_id, purchase_time)
+      VALUES (?, datetime('now'))
+    `, [userId]) // Sin precio = GRATIS
 
     const newKoTicket = await getOne('SELECT * FROM kotickets WHERE id = last_insert_rowid()')
 
