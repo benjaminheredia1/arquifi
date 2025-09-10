@@ -33,6 +33,7 @@ import { UnscratchedTicketsIndicator } from '@/components/UnscratchedTicketsIndi
 import { BuyKoTicketModal } from '@/components/BuyKoTicketModal'
 import { useLottery } from '@/hooks/useLottery'
 import { useAuth } from '@/hooks/useAuth'
+import { FarcasterShareButton } from '@/components/FarcasterShareButton'
 
 export default function HomePage() {
   const { address, isConnected } = useAccount()
@@ -299,6 +300,13 @@ export default function HomePage() {
                 onViewResults={() => showSection('results')}
                 onViewInfo={() => openModal('info')}
               />
+
+              {/* Farcaster Share Button - Solo aparece cuando es necesario */}
+              <div className="flex justify-center mt-4">
+                <FarcasterShareButton 
+                  text="🎰 ¡Juega en KokiFi Lottery y gana KOKI! La primera lotería descentralizada en Farcaster 🚀"
+                />
+              </div>
 
               {/* Countdown */}
               <Countdown />

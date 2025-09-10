@@ -2,11 +2,10 @@
   "name": "KokiFi Lottery",
   "iconUrl": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757543183/20250910_1824_Icono_Personalizado_remix_01k4tvm6xcfb4rv3aq5b572nw8_n9sod9.png",
   "subtitle": "Juega y gana KOKI en la lotería descentralizada",
-  "primaryCategory": "Games",
+  "description": "KokiFi Lottery es una web o aplicacion de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
+  "primaryCategory": "games",
   "screenshotUrls": [
-    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg",
-    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_bdb9693a_kwr0qx.jpg",
-    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.31_da54b47f_hov8hm.jpg"
+    "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg"
   ],
   "previewImage": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
   "heroImage": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545505/20250910_1853_Pato_Revisando_Tickets_remix_01k4tx75x9fnbset9ehrssfkby_wyijzz.png",
@@ -16,15 +15,14 @@
     "lottery",
     "gaming",
     "blockchain",
-    "crypto",
-    "kokifi"
+    "crypto"
   ],
-  "marketingTagline": "Juega, Rasca y Gana en la Lotería Descentralizada",
+  "marketingTagline": "Juega y Gana en la Lotería.",
   "buttonTitle": "Jugar Ahora",
-  "ogTitle": "KokiFi Lottery - Lotería Descentralizada",
-  "ogDescription": "Compra tickets, rasca KoTickets y gana premios en KOKI. La primera lotería descentralizada en Farcaster.",
+  "ogTitle": "KokiFi Lottery",
+  "ogDescription": "Gana premios en KOKI. La primera lotería descentralizada en Farcaster",
   "ogImageUrl": "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
-  "castShareUrl": "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery.vercel.app",
-  "homeUrl": "https://koqui-fi-lottery.vercel.app",
-  "webhookUrl": "https://koqui-fi-lottery.vercel.app/api/webhook"
+  "castShareUrl": "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery-m94t8w2cw-carla-loayzas-projects.vercel.app",
+  "homeUrl": "https://koqui-fi-lottery-m94t8w2cw-carla-loayzas-projects.vercel.app",
+  "webhookUrl": "https://koqui-fi-lottery-m94t8w2cw-carla-loayzas-projects.vercel.app/api/webhook"
 }
