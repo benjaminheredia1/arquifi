@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/database-supabase'
+import { sql } from '@/lib/database-neon'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,16 +8,11 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
 
     // Obtener todas las loterías completadas
-    const { data: allLotteries, error } = await supabase
-      .from('lotteries')
-      .select('*')
-      .eq('is_completed', true)
-      .order('end_time', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching lotteries:', error)
-      throw error
-    }
+    const allLotteries = await sql(`
+      SELECT * FROM lotteries 
+      WHERE is_completed = TRUE 
+      ORDER BY end_time DESC
+    `)
 
     // Paginación
     const startIndex = (page - 1) * limit
