@@ -6,12 +6,12 @@ export async function GET() {
       name: "KokiFi Lottery",
       version: "1",
       iconUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757543183/20250910_1824_Icono_Personalizado_remix_01k4tvm6xcfb4rv3aq5b572nw8_n9sod9.png",
-      homeUrl: "https://koqui-fi-lottery-m8t4jdblx-carla-loayzas-projects.vercel.app",
+      homeUrl: "https://koqui-fi-lottery.vercel.app",
       imageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
       buttonTitle: "Jugar Ahora",
       splashImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757546123/20250910_1914_Pato_y_Tickets_Digitales_remix_01k4tydv7efdvbfh2zg6kcx8gx_kxavwj.png",
       splashBackgroundColor: "#1a1a2e",
-      webhookUrl: "https://koqui-fi-lottery-m8t4jdblx-carla-loayzas-projects.vercel.app/api/webhook",
+      webhookUrl: "https://koqui-fi-lottery.vercel.app/api/webhook",
       subtitle: "Juega y gana KOKI en la lotería descentralizada",
       description: "KokiFi Lottery es una web o aplicacion de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
       primaryCategory: "games",
@@ -29,11 +29,11 @@ export async function GET() {
       ogTitle: "KokiFi Lottery",
       ogDescription: "Gana premios en KOKI. La primera lotería descentralizada en Farcaster",
       ogImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
-      castShareUrl: "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery-m8t4jdblx-carla-loayzas-projects.vercel.app"
+      castShareUrl: "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery.vercel.app"
     },
     accountAssociation: {
       header: "eyJmaWQiOjEzMjkzOTksInR5cGUiOiJhdXRoIiwia2V5IjoiMHg4MzZjODZlNzI1MjdkNGM3RmZkMjY4NTBiN0ZGYzc1ZTc3NWE1ZThhIn0",
-      payload: "eyJkb21haW4iOiJrb3F1aS1maS1sb3R0ZXJ5LW05NHQ4dzJjdy1jYXJsYS1sb2F5emFzLXByb2plY3RzLnZlcmNlbC5hcHAifQ",
+      payload: "eyJkb21haW4iOiJrb3F1aS1maS1sb3R0ZXJ5LnZlcmNlbC5hcHAifQ",
       signature: "2uUnjzu3tYCaotOjl2CLaTZUy0evxB32kH8/v+F7d6NQ+ei4GBAnzWCSYnPKCmpia4jBgrYVzo1xPFYskL4hLxw="
     }
   }
