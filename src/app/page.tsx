@@ -34,6 +34,7 @@ import { BuyKoTicketModal } from '@/components/BuyKoTicketModal'
 import { useLottery } from '@/hooks/useLottery'
 import { useAuth } from '@/hooks/useAuth'
 import { FarcasterShareButton } from '@/components/FarcasterShareButton'
+import { useFarcaster } from '@/hooks/useFarcaster'
 
 export default function HomePage() {
   const { address, isConnected } = useAccount()
@@ -48,6 +49,7 @@ export default function HomePage() {
     buyTicket, 
     loadLotteryInfo 
   } = useLottery(user)
+  const { isFarcaster, farcasterUser, isReady } = useFarcaster()
 
   const [activeModal, setActiveModal] = useState<string | null>(null)
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null)
@@ -254,7 +256,7 @@ export default function HomePage() {
     setIsLoading(false)
   }
 
-  if (isLoading && !hasCheckedAuth) {
+  if ((isLoading && !hasCheckedAuth) || !isReady) {
     return <LoadingScreen onComplete={handleLoadingComplete} />
   }
 

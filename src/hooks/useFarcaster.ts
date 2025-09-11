@@ -1,48 +1,60 @@
 import { useState, useEffect } from 'react';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 export const useFarcaster = () => {
   const [isFarcaster, setIsFarcaster] = useState(false);
   const [farcasterUser, setFarcasterUser] = useState<any>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Detectar si estamos en Farcaster
-    const checkFarcaster = () => {
-      // Verificar si estamos en un iframe de Farcaster
-      const isInFarcaster = window.parent !== window || 
-                           window.location.href.includes('farcaster') ||
-                           document.referrer.includes('farcaster') ||
-                           navigator.userAgent.includes('Farcaster');
-      
-      setIsFarcaster(isInFarcaster);
-      
-      // Si estamos en Farcaster, intentar obtener datos del usuario
-      if (isInFarcaster) {
-        // Escuchar mensajes de Farcaster
-        const handleMessage = (event: MessageEvent) => {
-          if (event.data?.type === 'farcaster:user') {
-            setFarcasterUser(event.data.user);
+    const initializeFarcaster = async () => {
+      try {
+        // Detectar si estamos en Farcaster
+        const isInFarcaster = window.parent !== window || 
+                             window.location.href.includes('farcaster') ||
+                             document.referrer.includes('farcaster') ||
+                             navigator.userAgent.includes('Farcaster');
+        
+        setIsFarcaster(isInFarcaster);
+        
+        if (isInFarcaster) {
+          // Inicializar el SDK de Farcaster
+          await sdk.actions.ready();
+          setIsReady(true);
+          
+          // Intentar obtener datos del usuario
+          try {
+            const user = await sdk.user.getUser();
+            setFarcasterUser(user);
+          } catch (error) {
+            console.log('No se pudo obtener datos del usuario:', error);
           }
-        };
-        
-        window.addEventListener('message', handleMessage);
-        
-        // Solicitar datos del usuario
-        window.parent.postMessage({ type: 'farcaster:requestUser' }, '*');
-        
-        return () => window.removeEventListener('message', handleMessage);
+        } else {
+          setIsReady(true);
+        }
+      } catch (error) {
+        console.error('Error inicializando Farcaster SDK:', error);
+        setIsReady(true);
       }
     };
 
-    checkFarcaster();
+    initializeFarcaster();
   }, []);
 
-  const shareToFarcaster = (text: string) => {
+  const shareToFarcaster = async (text: string) => {
     if (isFarcaster) {
-      // Compartir en Farcaster
-      window.parent.postMessage({ 
-        type: 'farcaster:share', 
-        text: text 
-      }, '*');
+      try {
+        // Usar el SDK oficial para compartir
+        await sdk.actions.share({
+          text: text,
+          url: window.location.href
+        });
+      } catch (error) {
+        console.error('Error compartiendo en Farcaster:', error);
+        // Fallback a Warpcast
+        const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
+        window.open(shareUrl, '_blank');
+      }
     } else {
       // Abrir Warpcast para compartir
       const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
@@ -53,6 +65,7 @@ export const useFarcaster = () => {
   return {
     isFarcaster,
     farcasterUser,
+    isReady,
     shareToFarcaster
   };
 };
