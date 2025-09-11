@@ -13,7 +13,7 @@ export async function GET() {
       splashBackgroundColor: "#1a1a2e",
       webhookUrl: "https://koqui-fi-lottery.vercel.app/api/webhook",
       subtitle: "Juega y gana KOKI",
-      description: "KokiFi Lottery es una lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución blockchain.",
+      description: "KokiFi Lottery es una lotería descentralizada donde puedes ganar",
       primaryCategory: "games",
       screenshotUrls: [
         "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg"
@@ -26,7 +26,7 @@ export async function GET() {
         "crypto"
       ],
       tagline: "Juega y Gana en la Lotería.",
-      ogTitle: "KokiFi Lottery",
+      ogTitle: "Gana premios en KOKI",
       ogDescription: "Gana premios en KOKI. La primera lotería descentralizada en Farcaster",
       ogImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
       castShareUrl: "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery.vercel.app"
