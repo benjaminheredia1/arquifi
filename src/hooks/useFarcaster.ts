@@ -22,10 +22,11 @@ export const useFarcaster = () => {
           await sdk.actions.ready();
           setIsReady(true);
           
-          // Intentar obtener datos del usuario
+          // Intentar obtener datos del usuario (si está disponible)
           try {
-            const user = await sdk.user.getUser();
-            setFarcasterUser(user);
+            // El SDK de Farcaster puede tener diferentes APIs según la versión
+            // Por ahora, solo inicializamos el SDK sin obtener datos del usuario
+            console.log('Farcaster SDK inicializado correctamente');
           } catch (error) {
             console.log('No se pudo obtener datos del usuario:', error);
           }
@@ -44,11 +45,17 @@ export const useFarcaster = () => {
   const shareToFarcaster = async (text: string) => {
     if (isFarcaster) {
       try {
-        // Usar el SDK oficial para compartir
-        await sdk.actions.share({
-          text: text,
-          url: window.location.href
-        });
+        // Usar el SDK oficial para compartir (si está disponible)
+        if (sdk.actions.share) {
+          await sdk.actions.share({
+            text: text,
+            url: window.location.href
+          });
+        } else {
+          // Fallback si la API no está disponible
+          const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
+          window.open(shareUrl, '_blank');
+        }
       } catch (error) {
         console.error('Error compartiendo en Farcaster:', error);
         // Fallback a Warpcast
