@@ -2,38 +2,40 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   const manifest = {
-    name: "KokiFi Lottery",
-    iconUrl: "https://koqui-fi-lottery.vercel.app/icon.png",
-    subtitle: "Juega y gana KOKI en la lotería descentralizada",
-    description: "KokiFi Lottery es una aplicación de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
-    primaryCategory: "games",
-    screenshotUrls: [
-      "https://koqui-fi-lottery.vercel.app/screenshot1.png",
-      "https://koqui-fi-lottery.vercel.app/screenshot2.png",
-      "https://koqui-fi-lottery.vercel.app/screenshot3.png"
-    ],
-    imageUrl: "https://koqui-fi-lottery.vercel.app/preview.png",
-    heroImageUrl: "https://koqui-fi-lottery.vercel.app/hero.png",
-    splashImageUrl: "https://koqui-fi-lottery.vercel.app/splash.png",
-    splashBackgroundColor: "#1a1a2e",
-    tags: [
-      "lottery",
-      "gaming",
-      "blockchain",
-      "crypto",
-      "defi",
-      "kokifi",
-      "prizes",
-      "tickets"
-    ],
-    tagline: "Juega, Rasca y Gana en la Lotería Descentralizada",
-    buttonTitle: "Jugar Ahora",
-    ogTitle: "KokiFi Lottery - Lotería Descentralizada",
-    ogDescription: "Compra tickets, rasca KoTickets y gana premios en KOKI. La primera lotería descentralizada en Farcaster.",
-    ogImageUrl: "https://koqui-fi-lottery.vercel.app/og-image.png",
-    castShareUrl: "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery.vercel.app",
-    homeUrl: "https://koqui-fi-lottery.vercel.app",
-    webhookUrl: "https://koqui-fi-lottery.vercel.app/api/webhook"
+    frame: {
+      name: "KokiFi Lottery",
+      version: "1",
+      iconUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757543183/20250910_1824_Icono_Personalizado_remix_01k4tvm6xcfb4rv3aq5b572nw8_n9sod9.png",
+      homeUrl: "https://koqui-fi-lottery-m8t4jdblx-carla-loayzas-projects.vercel.app",
+      imageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
+      buttonTitle: "Jugar Ahora",
+      splashImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757546123/20250910_1914_Pato_y_Tickets_Digitales_remix_01k4tydv7efdvbfh2zg6kcx8gx_kxavwj.png",
+      splashBackgroundColor: "#1a1a2e",
+      webhookUrl: "https://koqui-fi-lottery-m8t4jdblx-carla-loayzas-projects.vercel.app/api/webhook",
+      subtitle: "Juega y gana KOKI en la lotería descentralizada",
+      description: "KokiFi Lottery es una web o aplicacion de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
+      primaryCategory: "games",
+      screenshotUrls: [
+        "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg"
+      ],
+      heroImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545505/20250910_1853_Pato_Revisando_Tickets_remix_01k4tx75x9fnbset9ehrssfkby_wyijzz.png",
+      tags: [
+        "lottery",
+        "gaming",
+        "blockchain",
+        "crypto"
+      ],
+      tagline: "Juega y Gana en la Lotería.",
+      ogTitle: "KokiFi Lottery",
+      ogDescription: "Gana premios en KOKI. La primera lotería descentralizada en Farcaster",
+      ogImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757544488/assets_task_01k4twvabmejhafj82yf0vbx2m_1757544407_img_1_cjpiug.webp",
+      castShareUrl: "https://warpcast.com/~/compose?text=🎰+Juega+en+KokiFi+Lottery+y+gana+KOKI!+https://koqui-fi-lottery-m8t4jdblx-carla-loayzas-projects.vercel.app"
+    },
+    accountAssociation: {
+      header: "eyJmaWQiOjEzMjkzOTksInR5cGUiOiJhdXRoIiwia2V5IjoiMHg4MzZjODZlNzI1MjdkNGM3RmZkMjY4NTBiN0ZGYzc1ZTc3NWE1ZThhIn0",
+      payload: "eyJkb21haW4iOiJrb3F1aS1maS1sb3R0ZXJ5LW05NHQ4dzJjdy1jYXJsYS1sb2F5emFzLXByb2plY3RzLnZlcmNlbC5hcHAifQ",
+      signature: "2uUnjzu3tYCaotOjl2CLaTZUy0evxB32kH8/v+F7d6NQ+ei4GBAnzWCSYnPKCmpia4jBgrYVzo1xPFYskL4hLxw="
+    }
   }
 
   return NextResponse.json(manifest, {
