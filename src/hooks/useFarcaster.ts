@@ -43,30 +43,10 @@ export const useFarcaster = () => {
   }, []);
 
   const shareToFarcaster = async (text: string) => {
-    if (isFarcaster) {
-      try {
-        // Usar el SDK oficial para compartir (si está disponible)
-        if (sdk.actions.share) {
-          await sdk.actions.share({
-            text: text,
-            url: window.location.href
-          });
-        } else {
-          // Fallback si la API no está disponible
-          const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
-          window.open(shareUrl, '_blank');
-        }
-      } catch (error) {
-        console.error('Error compartiendo en Farcaster:', error);
-        // Fallback a Warpcast
-        const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
-        window.open(shareUrl, '_blank');
-      }
-    } else {
-      // Abrir Warpcast para compartir
-      const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
-      window.open(shareUrl, '_blank');
-    }
+    // Por ahora, siempre usar Warpcast para compartir
+    // El SDK de Farcaster puede no tener la función share disponible
+    const shareUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
+    window.open(shareUrl, '_blank');
   };
 
   return {
