@@ -12,8 +12,8 @@ export async function GET() {
       splashImageUrl: "https://res.cloudinary.com/dsqmynhve/image/upload/v1757546123/20250910_1914_Pato_y_Tickets_Digitales_remix_01k4tydv7efdvbfh2zg6kcx8gx_kxavwj.png",
       splashBackgroundColor: "#1a1a2e",
       webhookUrl: "https://koqui-fi-lottery.vercel.app/api/webhook",
-      subtitle: "Juega y gana KOKI en la lotería descentralizada",
-      description: "KokiFi Lottery es una web o aplicacion de lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución de los juegos blockchain.",
+      subtitle: "Juega y gana KOKI",
+      description: "KokiFi Lottery es una lotería descentralizada donde puedes comprar tickets, rascar KoTickets y ganar premios en KOKI. Únete a la revolución blockchain.",
       primaryCategory: "games",
       screenshotUrls: [
         "https://res.cloudinary.com/dsqmynhve/image/upload/v1757545807/Imagen_de_WhatsApp_2025-09-10_a_las_18.53.32_e858b3b7_esqx2v.jpg"
