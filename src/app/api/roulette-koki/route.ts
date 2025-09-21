@@ -5,7 +5,7 @@ import {
   addKokiPoints,
   getSystemConfig,
   getUserKokiBalance
-} from '@/lib/database-sqlite'
+} from '@/lib/database-config'
 
 export async function POST(request: NextRequest) {
   try {

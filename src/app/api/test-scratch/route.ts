@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { initializeDatabase, query, addKokiPoints } from '@/lib/database-sqlite'
+import { initializeDatabase, query, addKokiPoints } from '@/lib/database-config'
 
 export async function GET() {
   try {

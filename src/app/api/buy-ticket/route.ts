@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsers, getLotteries, getTickets, insertData, updateData } from '@/lib/supabase'
-import { processTicketPurchaseWithKoki, getUserKokiBalance } from '@/lib/database-sqlite'
+import { processTicketPurchaseWithKoki, getUserKokiBalance } from '@/lib/database-config'
 
 export async function POST(request: NextRequest) {
   try {

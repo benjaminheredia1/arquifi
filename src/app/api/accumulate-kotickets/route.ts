@@ -1,5 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
-import { query, getOne, run } from '@/lib/database-sqlite';
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { query, getOne, run } from '@/lib/database-config';
 
 export async function GET(request: NextRequest) {
   try {

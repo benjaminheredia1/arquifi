@@ -225,5 +225,340 @@ export async function createSampleCompletedLotteries() {
   }
 }
 
+// Funciones para compatibilidad con database-sqlite
+
+// Función de consulta genérica (alias para querySQL)
+export async function query(sql: string, params: (string | number | null)[] = []) {
+  return await querySQL(sql, params)
+}
+
+// Función para obtener un solo resultado
+export async function getOne(sql: string, params: (string | number | null)[] = []) {
+  const result = await querySQL(sql, params)
+  return result.length > 0 ? result[0] : null
+}
+
+// Función para ejecutar comandos sin retorno
+export async function run(sql: string, params: (string | number | null)[] = []) {
+  return await querySQL(sql, params)
+}
+
+// Función para obtener balance de KOKI de un usuario
+export async function getUserKokiBalance(userId: number): Promise<number> {
+  try {
+    // Obtener el total de puntos KOKI ganados
+    const earnedResult = await querySQL(`
+      SELECT COALESCE(SUM(amount), 0) as total_earned
+      FROM transactions
+      WHERE user_id = $1 AND type = 'koki_earned'
+    `, [userId])
+    
+    // Obtener el total de puntos KOKI gastados
+    const spentResult = await querySQL(`
+      SELECT COALESCE(SUM(amount), 0) as total_spent
+      FROM transactions
+      WHERE user_id = $1 AND type = 'koki_spent'
+    `, [userId])
+    
+    const totalEarned = earnedResult[0]?.total_earned || 0
+    const totalSpent = spentResult[0]?.total_spent || 0
+    
+    return Math.max(0, totalEarned - totalSpent)
+  } catch (error) {
+    console.error('Error getting user KOKI balance:', error)
+    return 0
+  }
+}
+
+// Función para obtener transacciones de KOKI de un usuario
+export async function getUserKokiTransactions(userId: number, limit: number = 10): Promise<any[]> {
+  try {
+    const result = await querySQL(`
+      SELECT type, amount, description, created_at
+      FROM transactions
+      WHERE user_id = $1 AND (type = 'koki_earned' OR type = 'koki_spent')
+      ORDER BY created_at DESC
+      LIMIT $2
+    `, [userId, limit])
+    
+    return result
+  } catch (error) {
+    console.error('Error getting user KOKI transactions:', error)
+    return []
+  }
+}
+
+// Función para verificar si un usuario puede jugar la ruleta
+export async function canUserPlayRoulette(userId: number): Promise<{canPlay: boolean, requiredKoki: number, userKoki: number}> {
+  try {
+    const requiredKoki = 10 // Costo por jugar la ruleta
+    const userKoki = await getUserKokiBalance(userId)
+    
+    return {
+      canPlay: userKoki >= requiredKoki,
+      requiredKoki,
+      userKoki
+    }
+  } catch (error) {
+    console.error('Error checking roulette eligibility:', error)
+    return { canPlay: false, requiredKoki: 10, userKoki: 0 }
+  }
+}
+
+// Función para obtener configuración del sistema
+export async function getSystemConfig(key: string): Promise<string | null> {
+  try {
+    // Como no tenemos tabla de configuración en Supabase, retornamos valores por defecto
+    const defaultConfigs: { [key: string]: string } = {
+      'roulette_cost': '10',
+      'koticket_cost': '5',
+      'ticket_cost': '10'
+    }
+    
+    return defaultConfigs[key] || null
+  } catch (error) {
+    console.error('Error getting system config:', error)
+    return null
+  }
+}
+
+// Función para agregar puntos KOKI
+export async function addKokiPoints(
+  userId: number,
+  amount: number,
+  description: string = 'KOKI points earned'
+): Promise<boolean> {
+  try {
+    await querySQL(`
+      INSERT INTO transactions (user_id, type, amount, description)
+      VALUES ($1, 'koki_earned', $2, $3)
+    `, [userId, amount, description])
+    
+    console.log(`✅ Added ${amount} KOKI points to user ${userId}`)
+    return true
+  } catch (error) {
+    console.error('Error adding KOKI points:', error)
+    return false
+  }
+}
+
+// Función para gastar puntos KOKI
+export async function spendKokiPoints(
+  userId: number,
+  amount: number,
+  description: string = 'KOKI points spent'
+): Promise<boolean> {
+  try {
+    const currentBalance = await getUserKokiBalance(userId)
+    
+    if (currentBalance < amount) {
+      console.log(`❌ User ${userId} doesn't have enough KOKI points`)
+      return false
+    }
+    
+    await querySQL(`
+      INSERT INTO transactions (user_id, type, amount, description)
+      VALUES ($1, 'koki_spent', $2, $3)
+    `, [userId, amount, description])
+    
+    console.log(`✅ Spent ${amount} KOKI points from user ${userId}`)
+    return true
+  } catch (error) {
+    console.error('Error spending KOKI points:', error)
+    return false
+  }
+}
+
+// Función para procesar compra de ticket con KOKI
+export async function processTicketPurchaseWithKoki(
+  userId: number,
+  ticketNumber: number,
+  kokiCost: number
+): Promise<{ success: boolean, message: string }> {
+  try {
+    // Verificar balance
+    const currentBalance = await getUserKokiBalance(userId)
+    if (currentBalance < kokiCost) {
+      return { success: false, message: 'Insufficient KOKI balance' }
+    }
+    
+    // Gastar KOKI
+    const spentSuccess = await spendKokiPoints(userId, kokiCost, `Ticket purchase #${ticketNumber}`)
+    if (!spentSuccess) {
+      return { success: false, message: 'Failed to spend KOKI points' }
+    }
+    
+    // Obtener lotería activa
+    const activeLotteries = await getLotteries('status', ['active'])
+    if (activeLotteries.length === 0) {
+      return { success: false, message: 'No active lottery found' }
+    }
+    
+    const activeLottery = activeLotteries[0]
+    
+    // Crear ticket
+    await querySQL(`
+      INSERT INTO tickets (user_id, lottery_id, number, price)
+      VALUES ($1, $2, $3, $4)
+    `, [userId, activeLottery.id, ticketNumber, 0]) // Precio 0 porque se pagó con KOKI
+    
+    return { success: true, message: 'Ticket purchased successfully' }
+  } catch (error) {
+    console.error('Error processing ticket purchase with KOKI:', error)
+    return { success: false, message: 'Internal error' }
+  }
+}
+
+// Funciones adicionales necesarias (implementaciones básicas)
+export async function scratchKoTicket(ticketId: number): Promise<{ success: boolean, prize: number }> {
+  // Implementación básica
+  return { success: true, prize: Math.floor(Math.random() * 100) }
+}
+
+export async function getKoTickets(userId: number): Promise<any[]> {
+  try {
+    return await querySQL(`
+      SELECT * FROM kotickets WHERE user_id = $1 ORDER BY purchase_time DESC
+    `, [userId])
+  } catch (error) {
+    return []
+  }
+}
+
+export async function createKoTicket(userId: number): Promise<boolean> {
+  try {
+    await querySQL(`
+      INSERT INTO kotickets (user_id) VALUES ($1)
+    `, [userId])
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
+export async function updateUserBalance(userId: number, newBalance: number): Promise<boolean> {
+  try {
+    await querySQL(`
+      UPDATE users SET balance = $1 WHERE id = $2
+    `, [newBalance, userId])
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
+export async function getUserById(userId: number): Promise<any> {
+  try {
+    const result = await querySQL(`
+      SELECT * FROM users WHERE id = $1
+    `, [userId])
+    return result[0] || null
+  } catch (error) {
+    return null
+  }
+}
+
+export async function createUser(userData: any): Promise<number | null> {
+  try {
+    const result = await querySQL(`
+      INSERT INTO users (username, email, password, fid, display_name, pfp_url, address)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id
+    `, [userData.username, userData.email, userData.password, userData.fid, 
+        userData.display_name, userData.pfp_url, userData.address])
+    return result[0]?.id || null
+  } catch (error) {
+    return null
+  }
+}
+
+export async function authenticateUser(email: string, password: string): Promise<any> {
+  try {
+    const result = await querySQL(`
+      SELECT * FROM users WHERE email = $1 AND password = $2
+    `, [email, password])
+    return result[0] || null
+  } catch (error) {
+    return null
+  }
+}
+
+export async function getActiveLottery(): Promise<any> {
+  try {
+    const result = await getLotteries('status', ['active'])
+    return result[0] || null
+  } catch (error) {
+    return null
+  }
+}
+
+export async function getLotteryHistory(): Promise<any[]> {
+  try {
+    return await getLotteries('status', ['completed'])
+  } catch (error) {
+    return []
+  }
+}
+
+export async function getUserTickets(userId: number): Promise<any[]> {
+  try {
+    return await querySQL(`
+      SELECT t.*, l.status as lottery_status 
+      FROM tickets t 
+      JOIN lotteries l ON t.lottery_id = l.id 
+      WHERE t.user_id = $1 
+      ORDER BY t.created_at DESC
+    `, [userId])
+  } catch (error) {
+    return []
+  }
+}
+
+export async function createTicket(ticketData: any): Promise<boolean> {
+  try {
+    await querySQL(`
+      INSERT INTO tickets (user_id, lottery_id, number, price)
+      VALUES ($1, $2, $3, $4)
+    `, [ticketData.user_id, ticketData.lottery_id, ticketData.number, ticketData.price])
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
+export async function getLotteryStats(): Promise<any> {
+  try {
+    const totalTickets = await querySQL(`SELECT COUNT(*) as count FROM tickets`)
+    const totalPrize = await querySQL(`SELECT SUM(total_pool) as total FROM lotteries WHERE status = 'completed'`)
+    return {
+      totalTickets: totalTickets[0]?.count || 0,
+      totalPrize: totalPrize[0]?.total || 0
+    }
+  } catch (error) {
+    return { totalTickets: 0, totalPrize: 0 }
+  }
+}
+
+export async function processRoulettePlay(userId: number): Promise<{ success: boolean, prize: number }> {
+  // Implementación básica de ruleta
+  const prize = Math.floor(Math.random() * 50) + 1
+  await addKokiPoints(userId, prize, 'Roulette win')
+  return { success: true, prize }
+}
+
+export async function getRouletteConfig(): Promise<any> {
+  return { cost: 10, maxPrize: 50 }
+}
+
+export async function createWeeklyFund(weekStart: string, totalIncome: number): Promise<number | null> {
+  // Implementación básica
+  return 1
+}
+
+export async function insertInitialSystemConfig(): Promise<void> {
+  // No necesario para Supabase
+  console.log('System config not needed for Supabase')
+}
+
 // Exportar funciones para uso en APIs
 export { querySQL, getUsers, getLotteries, insertData, updateData }

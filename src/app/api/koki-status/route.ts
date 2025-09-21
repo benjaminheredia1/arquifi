@@ -4,7 +4,7 @@ import {
   getUserKokiTransactions, 
   canUserPlayRoulette,
   getSystemConfig 
-} from '@/lib/database-sqlite'
+} from '@/lib/database-config'
 
 export async function GET(request: NextRequest) {
   try {

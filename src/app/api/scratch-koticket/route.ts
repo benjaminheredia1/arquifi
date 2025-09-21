@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsers } from '@/lib/supabase'
 import { generateScratchPrize } from '@/lib/lottery-system'
-import { initializeDatabase, query, addKokiPoints } from '@/lib/database-sqlite'
+import { initializeDatabase, query, addKokiPoints } from '@/lib/database-config'
 
 export async function POST(request: NextRequest) {
   const requestStarted = Date.now()

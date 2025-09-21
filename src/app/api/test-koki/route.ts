@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addKokiPoints, getUserKokiBalance, processTicketPurchaseWithKoki, getUserKokiTransactions } from '@/lib/database-sqlite';
+import { addKokiPoints, getUserKokiBalance, processTicketPurchaseWithKoki, getUserKokiTransactions } from '@/lib/database-config';
 
 export async function GET(request: NextRequest) {
   console.log('🧪 Testing KOKI System...');

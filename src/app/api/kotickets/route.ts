@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getKoTickets, insertData, verifedNoRepeatTickets } from '@/lib/supabase'
-import { initializeDatabase, query } from '@/lib/database-sqlite'
+import { initializeDatabase, query } from '@/lib/database-config'
 
 export async function GET(request: NextRequest) {
   try {
