@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getKoTickets, insertData, verifedNoRepeatTickets } from '@/lib/supabase'
-import { initializeDatabase, query } from '@/lib/database-config'
+import { getKoTickets, createKoTicket, scratchKoTicket } from '@/lib/database-config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,11 +13,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Inicializar base de datos SQLite
-    await initializeDatabase()
-
-    // Get user KoTickets from SQLite
-    const userKoTickets = await query('SELECT * FROM kotickets WHERE user_id = ? ORDER BY purchase_time DESC', [parseInt(userId)])
+    // Obtener KoTickets del usuario usando función específica de Supabase
+    const userKoTickets = await getKoTickets(parseInt(userId))
 
     // Mapear los KoTickets para incluir timestamp
     const mappedKoTickets = userKoTickets.map(koticket => ({
@@ -59,27 +55,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid userId' }, { status: 400 })
     }
 
-    await initializeDatabase()
-
-    // Verificar usuario vía Supabase (fuente de verdad de usuarios)
-    const { getUsers } = await import('@/lib/supabase')
-    const users = await getUsers('id', [userIdNum])
-    if (!users[0]) {
+    // Verificar usuario usando función específica
+    const { getUserById } = await import('@/lib/database-config')
+    const user = await getUserById(userIdNum)
+    if (!user) {
       return NextResponse.json({ success: false, error: 'Usuario no encontrado' }, { status: 404 })
     }
 
     const created: any[] = []
     for (let i = 0; i < quantity; i++) {
-      const nowIso = new Date().toISOString()
-      await query(
-        'INSERT INTO kotickets (user_id, purchase_time, is_scratched, prize_amount, price) VALUES (?,?,?,?,?)',
-        [userIdNum, nowIso, 0, 0, 0]
-      )
-      const row = await query(
-        'SELECT * FROM kotickets WHERE user_id = ? ORDER BY id DESC LIMIT 1',
-        [userIdNum]
-      )
-      if (row[0]) created.push(row[0])
+      const success = await createKoTicket(userIdNum)
+      if (success) {
+        created.push({
+          id: Date.now() + i, // ID temporal
+          user_id: userIdNum,
+          purchase_time: new Date().toISOString(),
+          is_scratched: false,
+          prize_amount: 0,
+          price: 0
+        })
+      }
     }
 
     return NextResponse.json({

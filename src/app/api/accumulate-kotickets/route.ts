@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
-import { query, getOne, run } from '@/lib/database-config';
+import { getKoTickets, getUserById, createKoTicket } from '@/lib/database-config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,16 +17,15 @@ export async function GET(request: NextRequest) {
 
     console.log('📊 Checking accumulation status for user:', userId);
 
-    // Verificar si el usuario ya acumuló hoy (versión simplificada)
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    // Obtener todos los KoTickets del usuario
+    const userKoTickets = await getKoTickets(parseInt(userId));
     
-    const todayKoTickets = await query(`
-      SELECT COUNT(*) as count 
-      FROM kotickets 
-      WHERE user_id = ? AND DATE(purchase_time) = ?
-    `, [parseInt(userId), today]);
-
-    const hasKoTicketToday = todayKoTickets[0]?.count > 0;
+    // Verificar si ya acumuló hoy
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const hasKoTicketToday = userKoTickets.some(ticket => {
+      const ticketDate = new Date(ticket.purchase_time).toISOString().split('T')[0];
+      return ticketDate === today;
+    });
 
     return NextResponse.json({
       success: true,
@@ -77,26 +76,9 @@ export async function POST(request: NextRequest) {
 
     console.log('👤 Checking user:', userId);
 
-    // Primero verificar qué usuarios existen
-    let allUsers;
-    try {
-      allUsers = await query('SELECT id, username, email FROM users LIMIT 10');
-      console.log('📋 Available users:', allUsers);
-    } catch (error) {
-      console.log('❌ Error getting all users:', error);
-    }
-
-    let user;
-    try {
-      user = await getOne('SELECT * FROM users WHERE id = ?', [parseInt(userId)]);
-      console.log('👤 User query result:', user);
-    } catch (error) {
-      console.log('❌ Error querying user:', error);
-      return NextResponse.json(
-        { success: false, error: 'Database error while checking user' },
-        { status: 500 }
-      );
-    }
+    // Verificar si el usuario existe
+    const user = await getUserById(parseInt(userId));
+    console.log('👤 User query result:', user);
 
     if (!user) {
       console.log('❌ User not found');
@@ -106,29 +88,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ User found:', user.username);
+    console.log('✅ User found:', user.username || user.display_name);
 
-    // Verificar si ya acumuló hoy (versión simplificada)
+    // Obtener KoTickets del usuario para verificar si ya acumuló hoy
+    const userKoTickets = await getKoTickets(parseInt(userId));
+    console.log('📊 User kotickets:', userKoTickets.length);
+    
+    // Verificar si ya acumuló hoy
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     console.log('📅 Checking for today:', today);
     
-    let todayKoTickets;
-    try {
-      todayKoTickets = await query(`
-        SELECT COUNT(*) as count 
-        FROM kotickets 
-        WHERE user_id = ? AND DATE(purchase_time) = ?
-      `, [parseInt(userId), today]);
-      console.log('📊 Today kotickets query result:', todayKoTickets);
-    } catch (error) {
-      console.log('❌ Error checking today kotickets:', error);
-      return NextResponse.json(
-        { success: false, error: 'Database error while checking accumulation' },
-        { status: 500 }
-      );
-    }
-
-    const hasKoTicketToday = todayKoTickets[0]?.count > 0;
+    const hasKoTicketToday = userKoTickets.some(ticket => {
+      const ticketDate = new Date(ticket.purchase_time).toISOString().split('T')[0];
+      return ticketDate === today;
+    });
+    
     console.log('🎫 Has koticket today:', hasKoTicketToday);
 
     if (hasKoTicketToday) {
@@ -145,34 +119,18 @@ export async function POST(request: NextRequest) {
 
     console.log('🎫 Creating new KoTicket...');
 
-    let result;
-    try {
-      result = await run(`
-        INSERT INTO kotickets (user_id, price, purchase_time, is_scratched, prize_amount)
-        VALUES (?, ?, datetime('now'), 0, 0)
-      `, [parseInt(userId), 0]);
-      console.log('✅ Insert result:', result);
-    } catch (error) {
-      console.log('❌ Error creating koticket:', error);
+    // Crear nuevo KoTicket
+    const success = await createKoTicket(parseInt(userId));
+    
+    if (!success) {
+      console.log('❌ Error creating koticket');
       return NextResponse.json(
-        { success: false, error: 'Database error while creating KoTicket' },
+        { success: false, error: 'Error al crear el KoTicket' },
         { status: 500 }
       );
     }
 
-    console.log('✅ KoTicket created, getting details...');
-
-    let newKoTicket;
-    try {
-      newKoTicket = await getOne('SELECT * FROM kotickets WHERE rowid = last_insert_rowid()');
-      console.log('✅ New koticket:', newKoTicket);
-    } catch (error) {
-      console.log('❌ Error getting new koticket:', error);
-      return NextResponse.json(
-        { success: false, error: 'Database error while retrieving KoTicket' },
-        { status: 500 }
-      );
-    }
+    console.log('✅ KoTicket created successfully');
 
     const response = {
       success: true,
@@ -180,9 +138,9 @@ export async function POST(request: NextRequest) {
         message: '¡KoTicket diario acumulado exitosamente!',
         accumulated: true,
         koticket: {
-          ...newKoTicket,
+          id: Date.now(), // ID temporal
           owner: parseInt(userId),
-          purchaseTime: Math.floor(new Date(newKoTicket.purchase_time).getTime() / 1000),
+          purchaseTime: Math.floor(Date.now() / 1000),
           isScratched: false,
           prizeAmount: 0
         },

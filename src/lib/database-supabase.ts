@@ -101,31 +101,68 @@ export async function initializeDatabase() {
 // Función para crear usuario demo
 export async function createDemoUser() {
   try {
-    // Verificar si ya existe el usuario demo
-    const existingUsers = await getUsers('username', ['demo1'])
-    const existingUser = existingUsers[0] || null
-    
-    if (!existingUser) {
-      await querySQL(`
-        INSERT INTO users (id, username, email, password, fid, display_name, pfp_url, address, balance, tickets_count, is_verified)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      `, [
-        1, // ID fijo para el usuario demo
-        'demo1',
-        'demo@kokifi.com',
-        'demo123',
-        12345,
-        'Demo User',
-        'https://api.dicebear.com/7.x/avataaars/svg?seed=demo',
-        '0x1234567890abcdef',
-        1000.00,
-        0,
-        1
-      ])
-      console.log('✅ Demo user created')
+    // Crear varios usuarios de prueba
+    const demoUsers = [
+      {
+        id: 1,
+        username: 'demo1',
+        email: 'demo1@arquifi.com',
+        password: 'demo123',
+        fid: 12345,
+        display_name: 'Demo User 1',
+        pfp_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo1',
+        address: '0x1234567890abcdef',
+        balance: 1000.00
+      },
+      {
+        id: 7,
+        username: 'testuser',
+        email: 'test@arquifi.com',
+        password: 'test123',
+        fid: 54321,
+        display_name: 'Test User',
+        pfp_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=test',
+        address: '0xfedcba0987654321',
+        balance: 500.00
+      }
+    ]
+
+    for (const user of demoUsers) {
+      // Verificar si ya existe el usuario
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+      
+      if (!existingUser) {
+        const { error } = await supabase
+          .from('users')
+          .insert({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            password: user.password,
+            fid: user.fid,
+            display_name: user.display_name,
+            pfp_url: user.pfp_url,
+            address: user.address,
+            balance: user.balance,
+            tickets_count: 0,
+            is_verified: true
+          })
+        
+        if (error) {
+          console.error(`❌ Error creating user ${user.username}:`, error)
+        } else {
+          console.log(`✅ Demo user ${user.username} created`)
+        }
+      } else {
+        console.log(`✅ User ${user.username} already exists`)
+      }
     }
   } catch (error) {
-    console.error('❌ Error creating demo user:', error)
+    console.error('❌ Error creating demo users:', error)
   }
 }
 
