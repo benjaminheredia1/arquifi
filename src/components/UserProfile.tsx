@@ -128,7 +128,7 @@ export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuy
           className="mb-8"
         >
           <KokiProgress 
-            userId={user.id} 
+            userId={Number(user.id)} 
             onStatusUpdate={setKokiStatus}
           />
         </motion.div>
