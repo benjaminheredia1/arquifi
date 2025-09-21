@@ -1,7 +1,7 @@
 {
-  "name": "kokifi-lottery",
+  "name": "arquifi-lottery",
   "version": "1.0.0",
-  "description": "KoquiFI Lottery - Farcaster Frame miniapp with Base Network integration",
+  "description": "ArquiFI Lottery - Farcaster Frame miniapp with Base Network integration",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
