@@ -55,6 +55,20 @@ export function UserTickets({ user }: UserTicketsProps) {
     }
   }, [loadUserTickets])
 
+  // Escuchar eventos específicos de actualización de tickets
+  useEffect(() => {
+    const handleTicketsUpdate = () => {
+      console.log('🔄 Tickets actualizados, recargando...')
+      loadUserTickets()
+    }
+
+    window.addEventListener('ticketsUpdated', handleTicketsUpdate)
+    
+    return () => {
+      window.removeEventListener('ticketsUpdated', handleTicketsUpdate)
+    }
+  }, [loadUserTickets])
+
   if (!user) {
     return (
       <div className="text-center py-12">

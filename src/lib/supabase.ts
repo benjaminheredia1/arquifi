@@ -92,6 +92,11 @@ export async function getKoTickets(where?: string, params?: any[]) {
   return data || []
 }
 
+export async function verifedNoRepeatTickets(id) { 
+  let ticketExist = await supabase.from('kotickets').select('*').eq('id', id);
+  return ticketExist
+}
+
 // Función para insertar datos
 export async function insertData(table: string, data: any) {
   const { data: result, error } = await supabase

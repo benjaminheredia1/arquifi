@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Accumulate KoTickets</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+        }
+
+        .result {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border-left: 4px solid #ff0000;
+        }
+
+        .success {
+            background: #e6ffe6;
+            border-left: 4px solid #00aa00;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test Accumulate KoTickets API</h1>
+
+    <div>
+        <label for="userId">User ID:</label>
+        <input type="number" id="userId" value="7" min="1">
+    </div>
+
+    <button onclick="checkStatus()">Check Status (GET)</button>
+    <button onclick="accumulateTicket()">Accumulate Ticket (POST)</button>
+
+    <div id="results"></div>
+
+    <script>
+        const BASE_URL = 'http://localhost:3001';
+
+        function showResult(title, data, isError = false) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            resultDiv.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function checkStatus() {
+            const userId = document.getElementById('userId').value;
+            try {
+                const response = await fetch(`${BASE_URL}/api/accumulate-kotickets?userId=${userId}`);
+                const data = await response.json();
+                showResult(`GET Status (${response.status})`, data, !response.ok);
+            } catch (error) {
+                showResult('GET Error', {
+                    error: error.message
+                }, true);
+            }
+        }
+
+        async function accumulateTicket() {
+            const userId = document.getElementById('userId').value;
+            try {
+                const response = await fetch(`${BASE_URL}/api/accumulate-kotickets`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: parseInt(userId)
+                    })
+                });
+                const data = await response.json();
+                showResult(`POST Accumulate (${response.status})`, data, !response.ok);
+            } catch (error) {
+                showResult('POST Error', {
+                    error: error.message
+                }, true);
+            }
+        }
+    </script>
+</body>
+
+</html>

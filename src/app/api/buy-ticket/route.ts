@@ -1,132 +1,118 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsers, getLotteries, getTickets, insertData, updateData } from '@/lib/supabase'
+import { processTicketPurchaseWithKoki, getUserKokiBalance } from '@/lib/database-sqlite'
 
 export async function POST(request: NextRequest) {
   try {
     const { number, userId } = await request.json()
+    console.log(`[Buy Ticket] Request: number=${number}, userId=${userId}`)
 
     if (!number || !userId) {
-      return NextResponse.json(
-        { success: false, error: 'Número y ID de usuario requeridos' },
-        { status: 400 }
-      )
+      console.log(`[Buy Ticket] Error: Missing required fields`)
+      return NextResponse.json({ success: false, error: 'Número y ID de usuario requeridos' }, { status: 400 })
     }
-
     if (number < 1 || number > 50) {
-      return NextResponse.json(
-        { success: false, error: 'Número debe estar entre 1 y 50' },
-        { status: 400 }
-      )
+      console.log(`[Buy Ticket] Error: Invalid number range: ${number}`)
+      return NextResponse.json({ success: false, error: 'Número debe estar entre 1 y 50' }, { status: 400 })
     }
 
-    // Verificar que el usuario existe
-    const users = await getUsers('id', [parseInt(userId)])
-    const user = users[0] || null
+    const userIdNum = parseInt(userId)
+    if (isNaN(userIdNum)) {
+      console.log(`[Buy Ticket] Error: Invalid userId: ${userId}`)
+      return NextResponse.json({ success: false, error: 'User ID inválido' }, { status: 400 })
+    }
+
+    console.log(`[Buy Ticket] Fetching users for userId: ${userIdNum}`)
+    const users = await getUsers('id', [userIdNum])
+    const user = users[0]
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Usuario no encontrado' },
-        { status: 404 }
-      )
+      console.log(`[Buy Ticket] Error: User not found for id: ${userIdNum}`)
+      return NextResponse.json({ success: false, error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Verificar que el usuario tiene suficiente balance
+    console.log(`[Buy Ticket] User found: ${user.username}, balance: ${user.balance}`)
     const ticketPrice = 10
     if (user.balance < ticketPrice) {
-      return NextResponse.json(
-        { success: false, error: 'Balance insuficiente' },
-        { status: 400 }
-      )
+      console.log(`[Buy Ticket] Error: Insufficient balance: ${user.balance} < ${ticketPrice}`)
+      return NextResponse.json({ success: false, error: 'Balance insuficiente' }, { status: 400 })
     }
 
-    // Verificar que el número no esté ya comprado en la lotería activa
+    console.log(`[Buy Ticket] Fetching active lotteries`)
     const lotteries = await getLotteries('status', ['active'])
-    const activeLottery = lotteries[0] || null
+    const activeLottery = lotteries[0]
     if (!activeLottery) {
-      return NextResponse.json(
-        { success: false, error: 'No hay lotería activa' },
-        { status: 400 }
-      )
+      console.log(`[Buy Ticket] Error: No active lottery found`)
+      return NextResponse.json({ success: false, error: 'No hay lotería activa' }, { status: 400 })
     }
 
-    // Verificar si el número ya está comprado (necesitamos una función más específica)
+    console.log(`[Buy Ticket] Active lottery: ${activeLottery.id}, checking for taken numbers`)
     const allTickets = await getTickets()
-    const existingTicket = allTickets.find(ticket => 
-      ticket.lottery_id === activeLottery.id && ticket.number === number
-    )
-
-    if (existingTicket) {
-      return NextResponse.json(
-        { success: false, error: 'Este número ya está comprado' },
-        { status: 400 }
-      )
+    const taken = allTickets.find(t => t.lottery_id === activeLottery.id && t.number === number)
+    if (taken) {
+      console.log(`[Buy Ticket] Error: Number ${number} already taken in lottery ${activeLottery.id}`)
+      return NextResponse.json({ success: false, error: 'Este número ya está comprado' }, { status: 400 })
     }
 
-    // Obtener el siguiente ID disponible para tickets
-    const allTicketsForId = await getTickets()
-    const maxId = allTicketsForId.length > 0 ? Math.max(...allTicketsForId.map(t => t.id)) : 0
+    const maxId = allTickets.length > 0 ? Math.max(...allTickets.map(t => t.id)) : 0
     const nextId = maxId + 1
 
-    // Comprar ticket con ID específico para evitar conflictos
     await insertData('tickets', {
       id: nextId,
-      user_id: parseInt(userId),
+      user_id: userIdNum,
       lottery_id: activeLottery.id,
-      number: number,
+      number,
       price: ticketPrice
     })
 
-    // Actualizar balance del usuario
     await updateData('users', {
       balance: user.balance - ticketPrice,
       tickets_count: user.tickets_count + 1,
       total_spent: user.total_spent + ticketPrice
-    }, { id: parseInt(userId) })
+    }, { id: userIdNum })
 
-    // Actualizar pool de la lotería
     await updateData('lotteries', {
       total_pool: activeLottery.total_pool + ticketPrice
     }, { id: activeLottery.id })
 
-    // Obtener usuario actualizado
-    const updatedUsers = await getUsers('id', [parseInt(userId)])
-    const updatedUser = updatedUsers[0]
+    try {
+      await processTicketPurchaseWithKoki(userIdNum, ticketPrice, nextId)
+      console.log(`✅ KOKI points awarded for ticket purchase to user ${userIdNum}`)
+    } catch (err) {
+      console.error('Error awarding KOKI points:', err)
+    }
 
-    // Mapear datos del usuario para el frontend
+    const kokiBalance = await getUserKokiBalance(userIdNum)
+    const refreshedUsers = await getUsers('id', [userIdNum])
+    const refreshed = refreshedUsers[0]
+
     const mappedUser = {
-      id: updatedUser.id.toString(),
-      fid: updatedUser.fid,
-      username: updatedUser.username,
-      email: updatedUser.email,
-      displayName: updatedUser.display_name,
-      pfpUrl: updatedUser.pfp_url,
-      address: updatedUser.address,
-      balance: updatedUser.balance.toString(),
-      ticketsCount: updatedUser.tickets_count,
-      totalSpent: updatedUser.total_spent.toString(),
-      joinedAt: updatedUser.joined_at,
-      isVerified: Boolean(updatedUser.is_verified)
+      id: refreshed.id.toString(),
+      fid: refreshed.fid,
+      username: refreshed.username,
+      email: refreshed.email,
+      displayName: refreshed.display_name,
+      pfpUrl: refreshed.pfp_url,
+      address: refreshed.address,
+      balance: refreshed.balance.toString(),
+      ticketsCount: refreshed.tickets_count,
+      totalSpent: refreshed.total_spent.toString(),
+      joinedAt: refreshed.joined_at,
+      isVerified: Boolean(refreshed.is_verified),
+      kokiPoints: kokiBalance
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        ticket: {
-          id: Date.now(),
-          number: number,
-          price: ticketPrice,
-          lotteryId: activeLottery.id
-        },
+        ticket: { id: nextId, number, price: ticketPrice, lotteryId: activeLottery.id },
         user: mappedUser,
+        kokiBalance,
         price: ticketPrice,
         message: `¡Ticket #${number} comprado exitosamente por ${ticketPrice} KOKI!`
       }
     })
-
   } catch (error) {
     console.error('Error buying ticket:', error)
-    return NextResponse.json(
-      { success: false, error: 'Error al comprar ticket' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Error al comprar ticket' }, { status: 500 })
   }
 }

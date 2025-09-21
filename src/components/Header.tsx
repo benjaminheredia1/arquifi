@@ -38,10 +38,10 @@ export function Header({
             className="flex items-center space-x-3"
           >
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">K</span>
+              <span className="text-white font-bold text-lg">A</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">KokiFi Lottery</h1>
+              <h1 className="text-xl font-bold text-white">ArquiFI Lottery</h1>
               <p className="text-xs text-white/60">Base Network</p>
             </div>
           </motion.div>

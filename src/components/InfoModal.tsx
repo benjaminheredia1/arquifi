@@ -57,7 +57,7 @@ export function InfoModal({ onClose }: InfoModalProps) {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">
-                  Sobre KokiFi Lottery
+                  Sobre ArquiFI Lottery
                 </h2>
                 <p className="text-white/60 text-sm">
                   La primera lotería descentralizada en Base Network
@@ -80,7 +80,7 @@ export function InfoModal({ onClose }: InfoModalProps) {
                 <span className="text-3xl">🎰</span>
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                KokiFi Lottery
+                ArquiFI Lottery
               </h3>
               <p className="text-white/70 leading-relaxed max-w-2xl mx-auto">
                 Una lotería descentralizada innovadora que combina la transparencia de blockchain 

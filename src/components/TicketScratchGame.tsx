@@ -31,39 +31,47 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
   const [totalWinnings, setTotalWinnings] = useState(0)
   
   useEffect(() => {
-    // Inicializar tickets rayados
     if (koTickets && koTickets.length > 0) {
-      setScratchedTickets(new Array(koTickets.length).fill(false))
-      setPrizes(new Array(koTickets.length).fill(null))
+      // Mapear estado real
+      const scratched = koTickets.map(t => t.isScratched)
+      const mappedPrizes = koTickets.map(t => {
+        if (!t.isScratched) return null
+        if (t.prize && t.prize > 0) {
+          return { type: 'koki', amount: t.prize, icon: Star, color: 'from-yellow-500 to-yellow-600' }
+        }
+        return { type: 'nothing', amount: 0, icon: X, color: 'from-gray-500 to-gray-600' }
+      })
+      setScratchedTickets(scratched)
+      setPrizes(mappedPrizes)
+      // Calcular premios ya ganados
+      const initialTotal = koTickets.reduce((acc, t) => acc + (t.prize || 0), 0)
+      setTotalWinnings(initialTotal)
     }
   }, [koTickets])
   
-  // Si no hay KoTickets, crear uno automáticamente
+  // Si no hay KoTickets, crear uno automáticamente (sin reload completo)
   useEffect(() => {
-    if (!koTickets || koTickets.length === 0) {
-      // Crear un KoTicket automáticamente
-      fetch('/api/kotickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: koTickets?.[0]?.owner || '2', // Usar el owner del primer ticket o default 2
-          quantity: 1
-        })
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          console.log('🎫 KoTicket creado automáticamente')
-          // Recargar la página para mostrar el KoTicket
-          window.location.reload()
+    let cancelled = false
+    const autoCreate = async () => {
+      if (!koTickets || koTickets.length === 0) {
+        try {
+          const owner = koTickets?.[0]?.owner || '2'
+          const res = await fetch('/api/kotickets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: owner, quantity: 1 })
+          })
+          const data = await res.json()
+          if (!cancelled && data.success) {
+            window.dispatchEvent(new CustomEvent('koticketsUpdated'))
+          }
+        } catch (e) {
+          console.error('Error creando KoTicket:', e)
         }
-      })
-      .catch(error => {
-        console.error('Error creando KoTicket:', error)
-      })
+      }
     }
+    autoCreate()
+    return () => { cancelled = true }
   }, [koTickets])
 
   // Mostrar loading mientras se crean los KoTickets
@@ -158,10 +166,33 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
           toast(prize.message, { icon: 'ℹ️' })
         }
         
-        // Recargar KoTickets para actualizar la burbuja
+        // Disparar eventos para refrescar UI (sin reload)
         window.dispatchEvent(new CustomEvent('koticketsUpdated'))
+        window.dispatchEvent(new CustomEvent('kokiBalanceUpdated'))
       } else {
-        toast.error(result.error || 'Error al rascar el ticket')
+        // Si ya estaba rascado, sincronizar estado local sin mostrar error fuerte
+        if (response.status === 400 && /ya ha sido rascado/i.test(result.error || '')) {
+          // Buscar el ticket en props para extraer premio guardado
+            const existing = koTickets[ticketIndex]
+            if (existing) {
+              const newScratchedTickets = [...scratchedTickets]
+              newScratchedTickets[ticketIndex] = true
+              const newPrizes = [...prizes]
+              const amount = existing.prize || (existing as any).prizeAmount || 0
+              newPrizes[ticketIndex] = amount > 0
+                ? { type: 'koki', amount, icon: Star, color: 'from-yellow-500 to-yellow-600' }
+                : { type: 'nothing', amount: 0, icon: X, color: 'from-gray-500 to-gray-600' }
+              setScratchedTickets(newScratchedTickets)
+              setPrizes(newPrizes)
+              // Asegurar totalWinnings incluye este premio
+              if (amount > 0 && !scratchedTickets[ticketIndex]) {
+                setTotalWinnings(prev => prev + amount)
+              }
+              toast.success('Ticket ya rascado – premio sincronizado')
+            }
+        } else {
+          toast.error(result.error || 'Error al rascar el ticket')
+        }
       }
     } catch (error) {
       console.error('Error scratching ticket:', error)
@@ -211,6 +242,9 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Cerrar"
+            title="Cerrar"
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-white/10 transition-colors"
           >
@@ -313,6 +347,9 @@ export function TicketScratchGame({ onClose, koTickets }: TicketScratchGameProps
               {koTickets.map((_, index) => (
                 <button
                   key={index}
+                  type="button"
+                  aria-label={`Ir al ticket ${index + 1}`}
+                  title={`Ticket ${index + 1}`}
                   onClick={() => setCurrentTicket(index)}
                   className={`w-3 h-3 rounded-full transition-colors ${
                     index === currentTicket

@@ -5,8 +5,6 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, avatarUrl } = await request.json()
     
-    console.log('Change avatar request:', { userId, avatarUrl, userIdType: typeof userId })
-
     if (!userId || !avatarUrl) {
       return NextResponse.json(
         { success: false, error: 'User ID y avatar URL son requeridos' },
@@ -16,12 +14,10 @@ export async function POST(request: NextRequest) {
 
     // Convertir userId a número si es string
     const numericUserId = typeof userId === 'string' ? parseInt(userId) : userId
-    console.log('Numeric user ID:', numericUserId)
 
     // Obtener usuario actual
     const users = await getUsers('id', [numericUserId])
     const user = users[0] || null
-    console.log('User found:', user ? 'Yes' : 'No', user ? `ID: ${user.id}` : '')
     
     if (!user) {
       return NextResponse.json(

@@ -13,9 +13,11 @@ import {
   Award,
   Star,
   Settings,
-  Coins
+  Coins,
+  Zap
 } from 'lucide-react'
 import { User as UserType } from '@/types'
+import { KokiProgress } from '@/components/KokiProgress'
 
 interface UserProfileProps {
   user: UserType | null
@@ -23,15 +25,17 @@ interface UserProfileProps {
   onChangeAvatar?: () => void
   onPlayGame?: () => void
   onBuyTicket?: () => void
+  onPlayRoulette?: () => void
 }
 
-export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuyTicket }: UserProfileProps) {
+export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuyTicket, onPlayRoulette }: UserProfileProps) {
   const [stats, setStats] = useState({
     totalWins: 0,
     winRate: 0,
     favoriteNumber: null as number | null,
     joinDate: ''
   })
+  const [kokiStatus, setKokiStatus] = useState<any>(null)
 
   useEffect(() => {
     if (user) {
@@ -115,6 +119,21 @@ export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuy
         </div>
       </motion.div>
 
+      {/* KOKI Progress */}
+      {user && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <KokiProgress 
+            userId={user.id} 
+            onStatusUpdate={setKokiStatus}
+          />
+        </motion.div>
+      )}
+
       {/* Action Buttons */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <motion.button
@@ -139,11 +158,45 @@ export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuy
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          onClick={onChangeAvatar}
-          className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl p-3 sm:p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all"
+          onClick={onPlayRoulette}
+          disabled={!kokiStatus?.roulette?.canPlay}
+          className={`rounded-xl p-3 sm:p-4 border transition-all ${
+            kokiStatus?.roulette?.canPlay 
+              ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 border-purple-500/30 hover:border-purple-500/50' 
+              : 'bg-gray-500/20 border-gray-500/30 opacity-60 cursor-not-allowed'
+          }`}
         >
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
+              kokiStatus?.roulette?.canPlay 
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600' 
+                : 'bg-gray-500'
+            }`}>
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <div className="text-white font-medium text-sm sm:text-base">
+                {kokiStatus?.roulette?.canPlay ? 'Jugar Ruleta' : 'Ruleta Bloqueada'}
+              </div>
+              <div className="text-white/60 text-xs sm:text-sm">
+                {kokiStatus?.roulette?.canPlay 
+                  ? `Cuesta ${kokiStatus.system?.rouletteCost || 10} KOKI` 
+                  : `Necesitas ${kokiStatus?.roulette?.requiredKoki || 25} KOKI`
+                }
+              </div>
+            </div>
+          </div>
+        </motion.button>
+
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          onClick={onChangeAvatar}
+          className="bg-gradient-to-r from-pink-500/20 to-pink-600/20 rounded-xl p-3 sm:p-4 border border-pink-500/30 hover:border-pink-500/50 transition-all"
+        >
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
               <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div className="text-left">
@@ -156,7 +209,7 @@ export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuy
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           onClick={onPlayGame}
           className="bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-xl p-3 sm:p-4 border border-green-500/30 hover:border-green-500/50 transition-all"
         >
@@ -174,7 +227,7 @@ export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuy
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           onClick={onBuyTicket}
           className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-3 sm:p-4 border border-blue-500/30 hover:border-blue-500/50 transition-all"
         >
@@ -309,7 +362,7 @@ export function UserProfile({ user, onBuyKoki, onChangeAvatar, onPlayGame, onBuy
             <div className="flex justify-between items-center">
               <span className="text-white/70 text-sm sm:text-base">Dirección:</span>
               <span className="text-white font-medium font-mono text-xs sm:text-sm">
-                {user.address.slice(0, 6)}...{user.address.slice(-4)}
+                {user?.address && user.address.length > 10 ? `${user.address.slice(0, 6)}...${user.address.slice(-4)}` : 'No disponible'}
               </span>
             </div>
             <div className="flex justify-between items-center">

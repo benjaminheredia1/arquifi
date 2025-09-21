@@ -12,7 +12,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [currentText, setCurrentText] = useState('')
 
   const loadingTexts = useMemo(() => [
-    'Inicializando KokiFi Lottery...',
+    'Inicializando ArquiFI Lottery...',
     'Conectando con Base Network...',
     'Cargando smart contracts...',
     'Preparando interfaz de usuario...',
@@ -106,7 +106,7 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg"
         >
-          KokiFi Lottery
+          ArquiFI Lottery
         </motion.h1>
 
         {/* Subtitle */}

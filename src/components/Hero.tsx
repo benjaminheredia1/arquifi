@@ -23,7 +23,7 @@ export function Hero() {
             <span className="text-2xl sm:text-3xl md:text-4xl">🎰</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-3 sm:mb-4">
-            <span className="modern-title">KokiFi</span>
+            <span className="modern-title">ArquiFI</span>
             <br />
             <span className="text-white">Lottery</span>
           </h1>

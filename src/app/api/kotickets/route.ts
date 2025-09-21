@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getKoTickets, insertData } from '@/lib/supabase'
+import { getKoTickets, insertData, verifedNoRepeatTickets } from '@/lib/supabase'
+import { initializeDatabase, query } from '@/lib/database-sqlite'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,23 +14,23 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user KoTickets
-    console.log('🔍 Obteniendo KoTickets para usuario:', userId)
-    const allKoTickets = await getKoTickets()
-    console.log('📋 Todos los KoTickets:', allKoTickets)
-    const userKoTickets = allKoTickets.filter(koticket => koticket.user_id === parseInt(userId))
-    console.log('🎫 KoTickets del usuario:', userKoTickets)
+    // Inicializar base de datos SQLite
+    await initializeDatabase()
+
+    // Get user KoTickets from SQLite
+    const userKoTickets = await query('SELECT * FROM kotickets WHERE user_id = ? ORDER BY purchase_time DESC', [parseInt(userId)])
 
     // Mapear los KoTickets para incluir timestamp
     const mappedKoTickets = userKoTickets.map(koticket => ({
       ...koticket,
       owner: koticket.user_id, // Mapear user_id a owner para el frontend
       purchaseTime: new Date(koticket.purchase_time).getTime() / 1000, // Convertir a timestamp
-      isScratched: koticket.is_scratched,
-      prizeAmount: koticket.prize_amount,
+      isScratched: Boolean(koticket.is_scratched),
+      prizeAmount: koticket.prize_amount || 0,
       scratchDate: koticket.scratch_date
     }))
-    console.log('🎯 KoTickets mapeados:', mappedKoTickets)
+
+    console.log(`[KoTickets GET] User ${userId} has ${mappedKoTickets.length} KoTickets`)
 
     return NextResponse.json({
       success: true,
@@ -49,58 +50,53 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { userId, quantity } = await request.json()
-
     if (!userId || !quantity) {
-      return NextResponse.json(
-        { success: false, error: 'User ID and quantity are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'User ID and quantity are required' }, { status: 400 })
     }
 
-    // Verificar que el usuario existe (sin restricción de balance)
+    const userIdNum = parseInt(userId)
+    if (isNaN(userIdNum)) {
+      return NextResponse.json({ success: false, error: 'Invalid userId' }, { status: 400 })
+    }
+
+    await initializeDatabase()
+
+    // Verificar usuario vía Supabase (fuente de verdad de usuarios)
     const { getUsers } = await import('@/lib/supabase')
-    const users = await getUsers('id', [parseInt(userId)])
-    const user = users[0] || null
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'Usuario no encontrado' },
-        { status: 400 }
-      )
+    const users = await getUsers('id', [userIdNum])
+    if (!users[0]) {
+      return NextResponse.json({ success: false, error: 'Usuario no encontrado' }, { status: 404 })
     }
 
-    // Create KoTickets (GRATIS)
-    const kotickets = []
-    const allKoTickets = await getKoTickets()
-    const maxId = allKoTickets.length > 0 ? Math.max(...allKoTickets.map(kt => kt.id)) : 0
-    
+    const created: any[] = []
     for (let i = 0; i < quantity; i++) {
-      const nextId = maxId + i + 1
-      const newKoTicketData = {
-        id: nextId,
-        user_id: parseInt(userId),
-        price: 0, // Precio 0 = GRATIS
-        is_scratched: false,
-        prize_amount: 0,
-        purchase_time: new Date().toISOString()
-      }
-      
-      console.log('🎫 Creando KoTicket con ID:', nextId, 'para usuario:', userId)
-      const result = await insertData('kotickets', newKoTicketData)
-      kotickets.push(result[0])
+      const nowIso = new Date().toISOString()
+      await query(
+        'INSERT INTO kotickets (user_id, purchase_time, is_scratched, prize_amount, price) VALUES (?,?,?,?,?)',
+        [userIdNum, nowIso, 0, 0, 0]
+      )
+      const row = await query(
+        'SELECT * FROM kotickets WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+        [userIdNum]
+      )
+      if (row[0]) created.push(row[0])
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        kotickets,
-        message: `${quantity} KoTicket${quantity > 1 ? 's' : ''} obtenido${quantity > 1 ? 's' : ''} GRATIS!`
+        kotickets: created.map(k => ({
+          ...k,
+          owner: k.user_id,
+          purchaseTime: new Date(k.purchase_time).getTime() / 1000,
+          isScratched: Boolean(k.is_scratched),
+          prizeAmount: k.prize_amount
+        })),
+        message: `${quantity} KoTicket${quantity > 1 ? 's' : ''} gratis generado${quantity > 1 ? 's' : ''}`
       }
     })
   } catch (error) {
-    console.error('Error creating KoTickets:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('[KoTickets POST] Error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

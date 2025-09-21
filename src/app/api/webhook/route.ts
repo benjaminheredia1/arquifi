@@ -4,8 +4,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    console.log('Farcaster webhook received:', body)
-    
     // Aquí puedes procesar los eventos de Farcaster
     // Por ejemplo: nuevos usuarios, interacciones, etc.
     

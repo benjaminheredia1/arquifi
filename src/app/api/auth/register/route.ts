@@ -91,9 +91,7 @@ export async function POST(request: NextRequest) {
       is_verified: true // Is verified
     }
 
-    console.log('🔍 Creando usuario con datos:', newUserData)
     const result = await insertData('users', newUserData)
-    console.log('✅ Usuario creado, resultado:', result)
 
     // Obtener el usuario creado usando el email
     const newUsers = await getUsers('email', [email])

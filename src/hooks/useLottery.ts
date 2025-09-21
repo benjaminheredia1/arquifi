@@ -146,6 +146,10 @@ export function useLottery(user?: any) {
           // Trigger user update in parent component
           window.dispatchEvent(new CustomEvent('userUpdated', { detail: result.data.user }))
         }
+        // Disparar actualización de balance KOKI y forzar refetch externo
+        window.dispatchEvent(new CustomEvent('kokiBalanceUpdated'))
+        // Opcional: si otro componente escucha 'ticketsUpdated'
+        window.dispatchEvent(new CustomEvent('ticketsUpdated'))
         return true
       } else {
         toast.error(result.error || 'Error al comprar ticket')

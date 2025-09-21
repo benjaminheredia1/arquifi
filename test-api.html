@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test API</title>
+</head>
+
+<body>
+    <h1>Test KokiFI API</h1>
+    <button onclick="testAccumulateKotickets()">Test Accumulate Kotickets User 7</button>
+    <button onclick="testKokiStatus()">Test KOKI Status User 48154</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testAccumulateKotickets() {
+            try {
+                const response = await fetch('http://localhost:3001/api/accumulate-kotickets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: '7'
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testKokiStatus() {
+            try {
+                const response = await fetch('http://localhost:3001/api/koki-status?userId=48154');
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

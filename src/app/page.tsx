@@ -31,6 +31,7 @@ import { SimplicityGuide } from '@/components/SimplicityGuide'
 import { LotteryStatus } from '@/components/LotteryStatus'
 import { UnscratchedTicketsIndicator } from '@/components/UnscratchedTicketsIndicator'
 import { BuyKoTicketModal } from '@/components/BuyKoTicketModal'
+import { RouletteModal } from '@/components/RouletteModal'
 import { useLottery } from '@/hooks/useLottery'
 import { useAuth } from '@/hooks/useAuth'
 import { FarcasterShareButton } from '@/components/FarcasterShareButton'
@@ -46,8 +47,10 @@ export default function HomePage() {
     lottery, 
     stats, 
     countdown, 
+    tickets,
     buyTicket, 
-    loadLotteryInfo 
+    loadLotteryInfo,
+    loadUserTickets
   } = useLottery(user)
   const { isFarcaster, farcasterUser, isReady } = useFarcaster()
 
@@ -165,6 +168,19 @@ export default function HomePage() {
       window.removeEventListener('koticketsUpdated', handleKoTicketsUpdate)
     }
   }, [loadKoTickets])
+
+  // Escuchar eventos de actualización de tickets de lotería
+  useEffect(() => {
+    const handleTicketsUpdate = () => {
+      console.log('🔄 Tickets de lotería actualizados, recargando...')
+      loadUserTickets()
+    }
+    
+    window.addEventListener('ticketsUpdated', handleTicketsUpdate)
+    return () => {
+      window.removeEventListener('ticketsUpdated', handleTicketsUpdate)
+    }
+  }, [loadUserTickets])
 
   const handleBuyTicket = async () => {
     if (!selectedNumber) {
@@ -306,7 +322,7 @@ export default function HomePage() {
               {/* Farcaster Share Button - Solo aparece cuando es necesario */}
               <div className="flex justify-center mt-4">
                 <FarcasterShareButton 
-                  text="🎰 ¡Juega en KokiFi Lottery y gana KOKI! La primera lotería descentralizada en Farcaster 🚀"
+                  text="🎰 ¡Juega en ArquiFI Lottery y gana KOKI! La primera lotería descentralizada en Farcaster 🚀"
                 />
               </div>
 
@@ -385,6 +401,7 @@ export default function HomePage() {
                 onChangeAvatar={() => openModal('change-avatar')}
                 onPlayGame={() => openModal('scratch-game')}
                 onBuyTicket={() => openModal('buy')}
+                onPlayRoulette={() => openModal('roulette')}
               />
             </motion.div>
           )}
@@ -465,6 +482,19 @@ export default function HomePage() {
           <TicketScratchGame
             onClose={closeModal}
             koTickets={koTickets}
+          />
+        )}
+
+        {activeModal === 'roulette' && (
+          <RouletteModal
+            isOpen={true}
+            onClose={closeModal}
+            userId={typeof user?.id === 'number' ? user.id : (user?.id ? parseInt(user.id) : 7)}
+            onWin={(prize) => {
+              console.log('Premio ganado:', prize)
+              toast.success(`¡Felicidades! Has ganado ${prize.name}`)
+              // Aquí puedes agregar lógica para dar el premio al usuario
+            }}
           />
         )}
       </AnimatePresence>
