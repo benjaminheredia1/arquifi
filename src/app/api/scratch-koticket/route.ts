@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUsers } from '@/lib/supabase'
+import { getUserById, getKoTicketById, updateKoTicketScratch, addKokiPoints, initializeDatabase } from '@/lib/database-config'
 import { generateScratchPrize } from '@/lib/lottery-system'
-import { initializeDatabase, query, addKokiPoints } from '@/lib/database-config'
 
 export async function POST(request: NextRequest) {
   const requestStarted = Date.now()
@@ -29,8 +28,7 @@ export async function POST(request: NextRequest) {
     await initializeDatabase()
     console.log('[Scratch] DB initialized')
 
-    const users = await getUsers('id', [userIdNum])
-    const user = users[0]
+    const user = await getUserById(userIdNum)
     if (!user) {
       console.warn('[Scratch] Usuario no encontrado', userIdNum)
       return NextResponse.json(
@@ -39,8 +37,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const kotickets = await query('SELECT * FROM kotickets WHERE id = ? AND user_id = ?', [koticketIdNum, userIdNum])
-    const koticket = kotickets[0]
+    const koticket = await getKoTicketById(koticketIdNum, userIdNum)
     console.log('[Scratch] KoTicket lookup result:', koticket)
 
     if (!koticket) {
@@ -61,11 +58,13 @@ export async function POST(request: NextRequest) {
     console.log('[Scratch] Prize generated:', prize)
     const prizeAmount = prize.type === 'koki' ? prize.amount : 0
 
-    await query('UPDATE kotickets SET is_scratched = 1, prize_amount = ?, scratch_date = ? WHERE id = ?', [
-      prizeAmount,
-      new Date().toISOString(),
-      koticketIdNum
-    ])
+    const updateSuccess = await updateKoTicketScratch(koticketIdNum, prizeAmount)
+    if (!updateSuccess) {
+      return NextResponse.json(
+        { success: false, error: 'Error al actualizar KoTicket' },
+        { status: 500 }
+      )
+    }
     console.log('[Scratch] KoTicket updated')
 
     if (prizeAmount > 0) {
@@ -73,8 +72,7 @@ export async function POST(request: NextRequest) {
       console.log('[Scratch] KOKI points added:', added)
     }
 
-    const updatedUsers = await getUsers('id', [userIdNum])
-    const updatedUser = updatedUsers[0] || null
+    const updatedUser = await getUserById(userIdNum)
 
     const duration = Date.now() - requestStarted
     console.log('[Scratch] Success in', duration, 'ms')

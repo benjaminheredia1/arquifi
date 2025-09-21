@@ -32,6 +32,8 @@ export const {
   scratchKoTicket,
   getKoTickets,
   createKoTicket,
+  getKoTicketById,
+  updateKoTicketScratch,
   updateUserBalance,
   getUserById,
   createUser,

@@ -636,3 +636,51 @@ export async function createWeeklyFund(weekStart: string, totalIncome: number): 
     return null
   }
 }
+
+// Función para obtener un KoTicket específico
+export async function getKoTicketById(koticketId: number, userId: number): Promise<any | null> {
+  try {
+    const koticket = await getOne('SELECT * FROM kotickets WHERE id = ? AND user_id = ?', [koticketId, userId])
+    return koticket || null
+  } catch (error) {
+    console.error('Error getting koticket by id:', error)
+    return null
+  }
+}
+
+// Función para actualizar un KoTicket después de rascarlo
+export async function updateKoTicketScratch(koticketId: number, prizeAmount: number): Promise<boolean> {
+  try {
+    await run('UPDATE kotickets SET is_scratched = 1, prize_amount = ?, scratch_date = ? WHERE id = ?', [
+      prizeAmount,
+      new Date().toISOString(),
+      koticketId
+    ])
+    return true
+  } catch (error) {
+    console.error('Error updating koticket scratch:', error)
+    return false
+  }
+}
+
+// Función para obtener KoTickets de un usuario
+export async function getKoTickets(userId: number): Promise<any[]> {
+  try {
+    const kotickets = await query('SELECT * FROM kotickets WHERE user_id = ? ORDER BY purchase_time DESC', [userId])
+    return kotickets || []
+  } catch (error) {
+    console.error('Error getting kotickets:', error)
+    return []
+  }
+}
+
+// Función para crear KoTicket
+export async function createKoTicket(userId: number): Promise<boolean> {
+  try {
+    await run('INSERT INTO kotickets (user_id) VALUES (?)', [userId])
+    return true
+  } catch (error) {
+    console.error('Error creating koticket:', error)
+    return false
+  }
+}

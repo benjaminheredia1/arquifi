@@ -844,5 +844,51 @@ export async function insertInitialSystemConfig(): Promise<void> {
   console.log('System config not needed for Supabase')
 }
 
+// Función para obtener un KoTicket específico
+export async function getKoTicketById(koticketId: number, userId: number): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from('kotickets')
+      .select('*')
+      .eq('id', koticketId)
+      .eq('user_id', userId)
+      .single()
+    
+    if (error) {
+      console.error('Error getting koticket by id:', error)
+      return null
+    }
+    
+    return data
+  } catch (error) {
+    console.error('Error getting koticket by id:', error)
+    return null
+  }
+}
+
+// Función para actualizar un KoTicket después de rascarlo
+export async function updateKoTicketScratch(koticketId: number, prizeAmount: number): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('kotickets')
+      .update({
+        is_scratched: true,
+        prize_amount: prizeAmount,
+        scratch_date: new Date().toISOString()
+      })
+      .eq('id', koticketId)
+    
+    if (error) {
+      console.error('Error updating koticket scratch:', error)
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error updating koticket scratch:', error)
+    return false
+  }
+}
+
 // Exportar funciones para uso en APIs
 export { querySQL, getUsers, getLotteries, insertData, updateData }
